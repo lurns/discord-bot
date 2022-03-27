@@ -34,11 +34,27 @@ export default {
       return new Date(b.dateLastActivity) - new Date(a.dateLastActivity);
     });
 
-    let msg = `here's what's in the crab pot: \n`;
+    //console.log(tasks[0])
+
+    let msg = `here's what's in the crab pot: \n --- \n`;
 
     // format message
     for (var i = 0; i < 3; i++) {
-      msg += `***card ${i + 1}*** / ${tasks[i].name} \n`
+      const resList = await fetch(`https://api.trello.com/1/cards/${tasks[i].id}/list?key=${process.env.TRELLO_KEY}&token=${process.env.TRELLO_TOKEN}`, {
+        method: 'GET'
+      })
+        .then(response => {
+          // console.log(
+          //   `Response: ${response.status} ${response.statusText}`
+          // );
+          return response.text();
+        })
+        .then(text => text)
+        .catch(err => console.error(err));
+      
+      let list = JSON.parse(resList);
+
+      msg += `***card ${i + 1}*** / ${list.name} / ${tasks[i].name} \n`
     }
 
     // send to channdel
