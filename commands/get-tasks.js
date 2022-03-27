@@ -1,13 +1,30 @@
 import { SlashCommandBuilder } from '@discordjs/builders'
 import fetch from "node-fetch";
 
-const board = process.env.PERSONAL_BOARD;
-
 export default {
 	data: new SlashCommandBuilder()
 		.setName('get-tasks')
-		.setDescription('Get most recent tasks from Trello'),
+		.setDescription('Get most recent tasks from Trello')
+    .addSubcommand(subcommand => 
+      subcommand
+        .setName('work')
+        .setDescription('Get work tasks')
+    )
+    .addSubcommand(subcommand => 
+      subcommand
+        .setName('personal')
+        .setDescription('Get personal tasks')
+    ),
 	async execute(interaction) {
+    let board = ''
+
+    // get type of board from subcommand
+    if (interaction.options.getSubcommand() === 'work') {
+      board = process.env.WORK_BOARD;
+    } else if (interaction.options.getSubcommand() === 'personal') {
+      board = process.env.PERSONAL_BOARD;
+    }
+
     // get tasks from trello board
     const res = await fetch(`https://api.trello.com/1/boards/${board}/cards?key=${process.env.TRELLO_KEY}&token=${process.env.TRELLO_TOKEN}`, {
       method: 'GET',
@@ -36,7 +53,7 @@ export default {
 
     //console.log(tasks[0])
 
-    let msg = `here's what's in the crab pot: \n --- \n`;
+    let msg = `here's what's in the crab pot for ${interaction.options.getSubcommand()}: \n --- \n`;
 
     // format message
     for (var i = 0; i < 3; i++) {
@@ -53,8 +70,17 @@ export default {
         .catch(err => console.error(err));
       
       let list = JSON.parse(resList);
+      let status = '';
 
-      msg += `***card ${i + 1}*** / ${list.name} / ${tasks[i].name} \n`
+      if (list.name === 'Completed') {
+        status = `🥳`
+      } else if (list.name === 'To Do') {
+        status = `👀`
+      } else {
+        status = `👷🏽‍♀️`
+      }
+
+      msg += `***card ${i + 1}*** / ${status} ${list.name} / ${tasks[i].name} \n`
     }
 
     // send to channdel
