@@ -3,7 +3,7 @@ import fetch from "node-fetch";
 
 export default {
 	data: new SlashCommandBuilder()
-		.setName('get-tasks')
+		.setName('tasks')
 		.setDescription('Get most recent tasks from Trello')
     .addSubcommand(subcommand => 
       subcommand
