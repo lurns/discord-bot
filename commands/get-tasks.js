@@ -83,7 +83,7 @@ export default {
       msg += `***card ${i + 1}*** / ${status} ${list.name} / ${tasks[i].name} \n`
     }
 
-    // send to channdel
+    // send to channel
     await interaction.reply(msg)
 	},
 };
