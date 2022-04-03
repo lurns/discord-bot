@@ -18,5 +18,6 @@ A bot designed to fetch data via discord commands (and automatically each mornin
 
 - [Node.js](https://nodejs.org/)
 - [discord.js](https://discord.js.org/)
+- [cron](https://npmjs.com/package/cron)
 - [Trello API](https://developer.atlassian.com/cloud/trello/)
 - [OpenWeather API](https://openweathermap.org/)

@@ -23,3 +23,14 @@ export const weatherEmoji = (typeId) => {
       return `🧙‍♂️`
   }
 }
+
+export const taskEmoji = (status) => {
+  switch (status) {
+    case 'Completed':
+      return `🥳`
+    case 'To Do':
+      return `👀`
+    default:
+      return `👷🏽‍♀️`
+  }
+}
