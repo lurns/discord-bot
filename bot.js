@@ -1,11 +1,12 @@
 import dotenv from 'dotenv';
 dotenv.config()
 
-import { Client, Collection, Intents, CommandInteraction } from 'discord.js';
+import { Client, Collection, Intents } from 'discord.js';
 import fs from 'node:fs'
 import nodeCron from 'node-cron';
 import { fetchWeather } from './services/weather-handler.js';
 import { fetchTasks } from './services/trello-handler.js';
+import { fetchRecipe } from './services/delicious-handler.js';
 
 const client = new Client({ 
   intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_INTEGRATIONS],
@@ -25,10 +26,10 @@ client.on('ready', async () => {
   console.log('bot has logged in')
   console.log(`${client.user.username}`)
 
-	const channel = client.channels.cache.find(c => c.id === process.env.CHANNEL_ID)
+	const channel = client.channels.cache.find(c => c.id === process.env.CHANNEL_ID);
 
-	// send weather every day at 8 AM
-	nodeCron.schedule('* * 8 * * *', async () => {
+	// send weather + tasks every day at 8 AM
+	nodeCron.schedule('0 0 8 * * *', async () => {
 		try {
 			const weatherEmbed = await fetchWeather();
 			channel.send({ embeds: [weatherEmbed] });
@@ -41,6 +42,17 @@ client.on('ready', async () => {
 				channel.send(workTasks)
 			}
 
+		} catch (error) {
+			console.log(error);
+		}
+	});
+
+	// send recipe every day at 12 PM
+	nodeCron.schedule('0 0 12 * * *', async () => {
+		try {
+			const recipeEmbed = await fetchRecipe();
+			console.log('sending recipe')
+			channel.send({ embeds: [recipeEmbed] });
 		} catch (error) {
 			console.log(error);
 		}

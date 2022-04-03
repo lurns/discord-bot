@@ -25,7 +25,8 @@
     "discord.js": "^13.6.0",
     "dotenv": "^16.0.0",
     "node-cron": "^3.0.0",
-    "node-fetch": "^3.2.3"
+    "node-fetch": "^3.2.3",
+    "puppeteer": "^13.5.2"
   },
   "type": "module"
 }
