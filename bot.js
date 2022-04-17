@@ -37,7 +37,7 @@ client.on('ready', async () => {
 			// if it's a weekday, send tasks
 			const today = new Date();
 
-			if (today.getDay() === 6) {
+			if (today.getDay() > 1 && today.getDay() < 6) {
 				const workTasks = await fetchTasks();
 				channel.send(workTasks)
 			}

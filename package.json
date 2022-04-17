@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node ./bot.js",
-    "dev": "nodemon ./bot.js"
+    "dev": "nodemon ./bot.js",
+    "worker": "node ./bot.js"
   },
   "repository": {
     "type": "git",
