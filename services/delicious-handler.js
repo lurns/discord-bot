@@ -12,7 +12,7 @@ export const fetchRecipe = async (interaction) => {
   }
 
   // set up puppeteer
-  const browser = await puppeteer.launch({headless: true});
+  const browser = await puppeteer.launch({headless: true, args: ['--no-sandbox']});
   const page = await browser.newPage()
   await page.goto(`https://damndelicious.net/?s=${searchTerm}`, {waitUntil: 'networkidle0'});
 
