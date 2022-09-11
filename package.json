@@ -28,5 +28,8 @@
     "node-fetch": "^3.2.3",
     "puppeteer": "^13.5.2"
   },
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "nodemon": "^2.0.19"
+  }
 }

@@ -7,6 +7,7 @@ import nodeCron from 'node-cron';
 import { fetchWeather } from './services/weather-handler.js';
 import { fetchTasks } from './services/trello-handler.js';
 import { fetchRecipe } from './services/delicious-handler.js';
+import { fetchTimeGif } from './services/gif-handler.js';
 
 const client = new Client({ 
   intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_INTEGRATIONS],
@@ -23,11 +24,10 @@ for (const file of commandFiles) {
 }
 
 client.on('ready', async () => {
-  console.log('bot has logged in')
-  console.log(`${client.user.username}`)
+	console.log('bot has logged in')
+	console.log(`${client.user.username}`)
 
 	const channel = client.channels.cache.find(c => c.id === process.env.CHANNEL_ID);
-
 	// send weather + tasks every day at 8 AM
 	nodeCron.schedule('0 0 8 * * *', async () => {
 		try {
@@ -37,9 +37,16 @@ client.on('ready', async () => {
 			// if it's a weekday, send tasks
 			const today = new Date();
 
-			if (today.getDay() > 1 && today.getDay() < 6) {
+			if (today.getDay() > 0 && today.getDay() < 6) {
 				const workTasks = await fetchTasks();
 				channel.send(workTasks)
+
+				// send a timesheet reminder on mondays
+				if (today.getDay() === 1) {
+					let url = await fetchTimeGif();
+					channel.send(url)
+					channel.send(`If you haven't already, be sure to complete your timesheet!`)
+				}
 			}
 
 		} catch (error) {
