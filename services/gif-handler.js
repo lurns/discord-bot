@@ -1,13 +1,36 @@
 import fetch from "node-fetch";
 
-export const fetchTimeGif = async () => {
-    const timeKeywords = [
-        'father time', 'encino man', 'space jam', 
-        'lost tv show', `it's time`, 'owen wilson wow',
-        'anime time', 'anime bread', 'naruto run',
-        'crab clock', 'crab time'
-    ];
-    const searchTerm = timeKeywords[Math.floor(Math.random() * timeKeywords.length)];
+const timeKeywords = [
+    'father time', 'encino man', 'space jam', 
+    'lost tv show', `it's time`, 'owen wilson wow',
+    'anime time', 'anime bread', 'naruto run',
+    'crab clock', 'crab time'
+];
+
+const danceKeywords = [
+    'anime dance', 'party time', 'pokemon dance', 
+    'britney spears', 'nsync bye bye bye', 'twerk', 
+    'bridgerton dance', 'beyonce', 'disco ball', 
+    'jazzercise', 'mosh', 'rave', 'soul train', 
+    'night at the roxbury', 'skeleton dance', 'dance', 
+    'funny dance'
+]
+
+export const fetchGif = async (type) => {
+    let keywords;
+
+    switch(type) {
+        case 'dance':
+          keywords = danceKeywords;
+          break;
+        case 'time':
+          keywords = timeKeywords
+          break;
+        default:
+          keywords = ['shrug', 'idk', 'unknown']
+      }
+
+    const searchTerm = keywords[Math.floor(Math.random() * keywords.length)];
 
     // fetch options from tenor
     const res = await fetch(`https://tenor.googleapis.com/v2/search?q=${searchTerm}&key=${process.env.TENOR_KEY}&limit=10`, {

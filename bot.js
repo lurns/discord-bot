@@ -7,7 +7,7 @@ import nodeCron from 'node-cron';
 import { fetchWeather } from './services/weather-handler.js';
 import { fetchTasks } from './services/trello-handler.js';
 import { fetchRecipe } from './services/delicious-handler.js';
-import { fetchTimeGif } from './services/gif-handler.js';
+import { fetchGif } from './services/gif-handler.js';
 import { rollDanceTime } from './util/time.js';
 
 const client = new Client({ 
@@ -45,8 +45,8 @@ client.on('ready', async () => {
 
 				// send a timesheet reminder on mondays
 				if (today.getDay() === 1) {
-					let url = await fetchTimeGif();
-					channel.send(url)
+					let timeUrl = await fetchGif('time');
+					channel.send(timeUrl)
 					channel.send(`If you haven't already, be sure to complete your timesheet!`)
 				}
 
@@ -57,6 +57,8 @@ client.on('ready', async () => {
 
 				nodeCron.schedule(`0 ${danceMin} ${danceHour} * * *`, async () => {
 					try {
+						let danceUrl = await fetchGif('dance');
+						channel.send(danceUrl)
 						channel.send('🚨 🪩 🦀 dance break 🦀 🪩 🚨');
 					} catch (error) {
 						console.log(error);
