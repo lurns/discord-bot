@@ -8,6 +8,7 @@ import { fetchWeather } from './services/weather-handler.js';
 import { fetchTasks } from './services/trello-handler.js';
 import { fetchRecipe } from './services/delicious-handler.js';
 import { fetchTimeGif } from './services/gif-handler.js';
+import { rollDanceTime } from './util/time.js';
 
 const client = new Client({ 
   intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_INTEGRATIONS],
@@ -28,13 +29,14 @@ client.on('ready', async () => {
 	console.log(`${client.user.username}`)
 
 	const channel = client.channels.cache.find(c => c.id === process.env.CHANNEL_ID);
+
 	// send weather + tasks every day at 8 AM
 	nodeCron.schedule('0 0 8 * * *', async () => {
 		try {
 			const weatherEmbed = await fetchWeather();
 			channel.send({ embeds: [weatherEmbed] });
 
-			// if it's a weekday, send tasks
+			// if it's a weekday, send tasks and schedule a dance break
 			const today = new Date();
 
 			if (today.getDay() > 0 && today.getDay() < 6) {
@@ -47,6 +49,19 @@ client.on('ready', async () => {
 					channel.send(url)
 					channel.send(`If you haven't already, be sure to complete your timesheet!`)
 				}
+
+				// schedule a random dance break
+				const danceBreak = rollDanceTime();
+				const danceHour = danceBreak.getHours().toString();
+				const danceMin = danceBreak.getMinutes().toString();
+
+				nodeCron.schedule(`0 ${danceMin} ${danceHour} * * *`, async () => {
+					try {
+						channel.send('🚨 🪩 🦀 dance break 🦀 🪩 🚨');
+					} catch (error) {
+						console.log(error);
+					}
+				});
 			}
 
 		} catch (error) {
