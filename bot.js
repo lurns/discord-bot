@@ -25,8 +25,8 @@ for (const file of commandFiles) {
 }
 
 client.on('ready', async () => {
-	console.log('bot has logged in')
-	console.log(`${client.user.username}`)
+	console.log('bot has logged in');
+	console.log(`${client.user.username}`);
 
 	const channel = client.channels.cache.find(c => c.id === process.env.CHANNEL_ID);
 
@@ -41,13 +41,13 @@ client.on('ready', async () => {
 
 			if (today.getDay() > 0 && today.getDay() < 6) {
 				const workTasks = await fetchTasks();
-				channel.send(workTasks)
+				channel.send(workTasks);
 
 				// send a timesheet reminder on mondays
 				if (today.getDay() === 1) {
 					let timeUrl = await fetchGif('time');
-					channel.send(timeUrl)
-					channel.send(`If you haven't already, be sure to complete your timesheet!`)
+					channel.send(timeUrl);
+					channel.send(`If you haven't already, be sure to complete your timesheet!`);
 				}
 
 				// schedule a random dance break
@@ -58,7 +58,7 @@ client.on('ready', async () => {
 				nodeCron.schedule(`0 ${danceMin} ${danceHour} * * *`, async () => {
 					try {
 						let danceUrl = await fetchGif('dance');
-						channel.send(danceUrl)
+						channel.send(danceUrl);
 						channel.send('🚨 🪩 🦀 dance break 🦀 🪩 🚨');
 					} catch (error) {
 						console.log(error);
@@ -75,7 +75,7 @@ client.on('ready', async () => {
 	nodeCron.schedule('0 0 12 * * *', async () => {
 		try {
 			const recipeEmbed = await fetchRecipe();
-			console.log('sending recipe')
+			console.log('sending recipe');
 			channel.send({ embeds: [recipeEmbed] });
 		} catch (error) {
 			console.log(error);

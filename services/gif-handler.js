@@ -14,7 +14,7 @@ const danceKeywords = [
     'jazzercise', 'mosh', 'rave', 'soul train', 
     'night at the roxbury', 'skeleton dance', 'dance', 
     'funny dance'
-]
+];
 
 export const fetchGif = async (type) => {
     let keywords;
