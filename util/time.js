@@ -26,8 +26,8 @@ export const rollDanceTime = () => {
     }
 
     // set the time
-    danceTime.setHours(18);
-    danceTime.setMinutes(50);
+    danceTime.setHours(hour);
+    danceTime.setMinutes(minute);
 
     return danceTime;
 }
