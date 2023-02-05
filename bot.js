@@ -8,6 +8,7 @@ import { fetchWeather } from './services/weather-handler.js';
 import { fetchTasks } from './services/trello-handler.js';
 import { fetchRecipe } from './services/delicious-handler.js';
 import { fetchGif } from './services/gif-handler.js';
+import { fetchYoutube } from './services/youtube-handler.js';
 import { rollDanceTime } from './util/time.js';
 
 const client = new Client({ 
@@ -29,6 +30,8 @@ client.on('ready', async () => {
 	console.log(`${client.user.username}`);
 
 	const channel = client.channels.cache.find(c => c.id === process.env.CHANNEL_ID);
+
+	// await fetchYoutube();
 
 	// send weather + tasks every day at 8 AM
 	nodeCron.schedule('0 0 8 * * *', async () => {
@@ -89,7 +92,12 @@ client.on('ready', async () => {
 });
 
 client.on('interactionCreate', async (interaction) => {
-  if (!interaction.isCommand()) return;
+	if (interaction.isButton() && interaction.customId.includes('music')) {
+		const videoUrl = await fetchYoutube(interaction);
+		return await interaction.reply(videoUrl);
+	}
+
+  	if (!interaction.isCommand()) return;
 
 	const command = client.commands.get(interaction.commandName);
 
