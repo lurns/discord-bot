@@ -38,10 +38,6 @@ client.on('ready', async () => {
 
 			// if it's a weekday, send tasks and schedule a dance break
 			const today = new Date();
-			let danceSchedule;
-
-			// clear dance time if applicable
-			danceSchedule ? danceSchedule.stop() : '';
 
 			if (today.getDay() > 0 && today.getDay() < 6) {
 				const workTasks = await fetchTasks();
@@ -59,7 +55,7 @@ client.on('ready', async () => {
 				const danceHour = danceBreak.getHours().toString();
 				const danceMin = danceBreak.getMinutes().toString();
 
-				danceSchedule = nodeCron.schedule(`0 ${danceMin} ${danceHour} * * *`, async () => {
+				const currentDance = nodeCron.schedule(`0 ${danceMin} ${danceHour} * * *`, async () => {
 					try {
 						let danceUrl = await fetchGif('dance');
 						channel.send(danceUrl);
@@ -67,6 +63,10 @@ client.on('ready', async () => {
 					} catch (error) {
 						console.log(error);
 					}
+				});
+
+				nodeCron.schedule('0 59 23 * * *', async () => {
+					currentDance.stop();
 				});
 			}
 
