@@ -18,6 +18,9 @@ A bot designed to fetch data via discord commands. Sends out weather and work ta
 
 `/recipe [keyword]` searches for a recipe via given keyword
 
+`/music` 🆕 gives option of 'work' or 'break' and selects a random video from an appropriate 
+youtube playlist
+
 ## Technologies
 
 - [Node.js](https://nodejs.org/)
@@ -26,3 +29,4 @@ A bot designed to fetch data via discord commands. Sends out weather and work ta
 - [Trello API](https://developer.atlassian.com/cloud/trello/)
 - [OpenWeather API](https://openweathermap.org/)
 - [Puppeteer](https://github.com/puppeteer/puppeteer)
+- [Youtube Data API](https://developers.google.com/youtube/v3)
