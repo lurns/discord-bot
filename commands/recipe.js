@@ -9,8 +9,9 @@ export default {
       option.setName('keyword')
       .setDescription('Keyword')),
 	async execute(interaction) {
-    await interaction.reply(`Let's see what we can cook up...`)
-    const recipeEmbed = await fetchRecipe(interaction);
-		await interaction.editReply({embeds: [recipeEmbed]}).catch(err => console.log('err', err));
+    await interaction.deferReply();
+
+		const recipeEmbed = await fetchRecipe(interaction);
+			await interaction.editReply({embeds: [recipeEmbed]}).catch(err => console.log('err', err));
 	},
 };
