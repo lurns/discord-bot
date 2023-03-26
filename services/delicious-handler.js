@@ -14,7 +14,7 @@ export const fetchRecipe = async (interaction) => {
   // set up puppeteer
   const browser = await puppeteer.launch({headless: true, args: ['--no-sandbox']});
   const page = await browser.newPage()
-  await page.goto(`https://damndelicious.net/?s=${searchTerm}`, {waitUntil: 'networkidle0'});
+  await page.goto(`https://damndelicious.net/?s=${searchTerm}`, {waitUntil: 'domcontentloaded'});
 
   // get page numbers
   let pageNum = 1;
@@ -39,17 +39,14 @@ export const fetchRecipe = async (interaction) => {
       pageNum = 1;
     }
     
-    await page.goto(`https://damndelicious.net/page/${pageNum}/?s=${searchTerm}`, {waitUntil: 'networkidle0'});
+    await page.goto(`https://damndelicious.net/page/${pageNum}/?s=${searchTerm}`, {waitUntil: 'domcontentloaded'});
   }
 
   // choose a random recipe on the page
   const recipe = await page.evaluate(() => {
     const recipeElements = document.querySelectorAll('.teaser-post');
-    let count = 0;
 
-    recipeElements.forEach(recipe => count++);
-
-    const recipeNum = Math.floor(Math.random() * count);
+    const recipeNum = Math.floor(Math.random() * recipeElements.length);
 
     // parse recipe
     const recipeChoice = recipeElements[recipeNum];
