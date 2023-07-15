@@ -64,7 +64,7 @@ const deliciousScrape = async (searchTerm) => {
 
 const harvestScrape = async (searchTerm) => {
   // set up puppeteer
-  const browser = await puppeteer.launch({ headless: false, args: ['--no-sandbox'] });
+  const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
   const page = await browser.newPage()
   await page.goto(`https://www.halfbakedharvest.com/#search/q=${searchTerm}`, { waitUntil: 'domcontentloaded' });
 
@@ -90,11 +90,8 @@ const harvestScrape = async (searchTerm) => {
   let recipeURL = recipeChoice.url;
   let recipeIMG = recipeChoice.image.url;
   let recipeTitle = recipeChoice.titleText;
-  // TODO: description might have some markup that i'll have to
-  // snip out to render more nicely on discord
+  // TODO: remove markup tags in desc
   let recipeDesc = recipeChoice.descriptionHtml;
-
-  console.log(recipeURL, recipeIMG, recipeTitle, recipeDesc);
 
   return { recipeURL, recipeIMG, recipeTitle, recipeDesc };
 }
@@ -121,10 +118,13 @@ export const fetchRecipe = async (interaction) => {
   switch (site) {
     case 0:
       recipe = await deliciousScrape(searchTerm);
+      break;
     case 1:
       recipe = await harvestScrape(searchTerm);
+      break;
     default:
       recipe = await deliciousScrape(searchTerm);
+      break;
   }
 
   // format message embed
@@ -140,5 +140,3 @@ export const fetchRecipe = async (interaction) => {
 
   return recipeEmbed;
 }
-
-await harvestScrape();
