@@ -1,4 +1,3 @@
-import fetch from "node-fetch";
 import { taskEmoji } from "../util/emoji.js";
 
 export const fetchTasks = async (interaction) => {

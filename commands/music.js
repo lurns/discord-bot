@@ -1,5 +1,4 @@
-import { MessageActionRow, MessageButton } from 'discord.js';
-import { SlashCommandBuilder } from '@discordjs/builders';
+import { ActionRowBuilder, ButtonBuilder, SlashCommandBuilder, ButtonStyle } from 'discord.js';
 
 export default {
 	data: new SlashCommandBuilder()
@@ -8,18 +7,18 @@ export default {
 	async execute(interaction) {
     await interaction.reply(`Get ready to jam...`);
 
-    const row = new MessageActionRow()
+    const row = new ActionRowBuilder()
     .addComponents(
-      new MessageButton()
+      new ButtonBuilder()
         .setCustomId('music-work')
         .setLabel('I need to work')
-        .setStyle('PRIMARY')
+        .setStyle(ButtonStyle.Primary)
     )
     .addComponents(
-      new MessageButton()
+      new ButtonBuilder()
         .setCustomId('music-break')
         .setLabel('I need a break')
-        .setStyle('SUCCESS')
+        .setStyle(ButtonStyle.Success)
     );
 
     await interaction.editReply(

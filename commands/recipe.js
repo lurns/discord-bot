@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from '@discordjs/builders';
+import { SlashCommandBuilder } from 'discord.js';
 import { fetchRecipe } from '../services/delicious-handler.js';
 
 export default {

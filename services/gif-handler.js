@@ -1,5 +1,3 @@
-import fetch from "node-fetch";
-
 const timeKeywords = [
     'father time', 'encino man', 'space jam', 
     'lost tv show', `it's time`, 'owen wilson wow',

@@ -1,5 +1,4 @@
 import { weatherEmoji } from "../util/emoji.js";
-import fetch from "node-fetch";
 
 export const fetchWeather = async (interaction) => {
   let city;

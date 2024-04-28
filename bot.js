@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 dotenv.config()
 
-import { Client, Collection, Intents } from 'discord.js';
+import { Client, Collection, GatewayIntentBits, Partials } from 'discord.js';
 import fs from 'node:fs'
 import nodeCron from 'node-cron';
 import { fetchWeather } from './services/weather-handler.js';
@@ -12,8 +12,8 @@ import { fetchYoutube } from './services/youtube-handler.js';
 import { rollDanceTime } from './util/time.js';
 
 const client = new Client({ 
-  intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_INTEGRATIONS],
-  partials: ['MESSAGE','REACTION'] 
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildIntegrations],
+  partials: [Partials.Message, Partials.Reaction] 
 });
 
 client.commands = new Collection();

@@ -1,5 +1,3 @@
-import fetch from "node-fetch";
-
 export const fetchYoutube = async (interaction) => {
   let playlistId;
 
@@ -32,10 +30,6 @@ export const fetchYoutube = async (interaction) => {
 
   return `https://www.youtube.com/watch?v=${videoData.contentDetails.videoId}`;
 
-
-  console.log(videoNum);
-  console.log(playlistId);
   // console.log(playlist.items[0].snippet);
   // console.log(playlist.items[0].contentDetails);
-
 }
