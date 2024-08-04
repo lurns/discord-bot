@@ -1,4 +1,7 @@
-import puppeteer from "puppeteer";
+import puppeteer from "puppeteer-extra";
+import StealthPlugin from "puppeteer-extra-plugin-stealth";
+
+puppeteer.use(StealthPlugin());
 
 const deliciousScrape = async (searchTerm) => {
   // set up puppeteer
