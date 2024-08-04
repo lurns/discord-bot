@@ -1,9 +1,20 @@
 import puppeteer from "puppeteer";
 
+const puppeteerOpts = { 
+  headless: true, 
+  args: [
+    '--no-sandbox', 
+    '--disable-setuid-sandbox'
+  ] 
+}
+
+const userAgent = '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36';
+
 const deliciousScrape = async (searchTerm) => {
   // set up puppeteer
-  const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox', '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'] });
-  const page = await browser.newPage()
+  const browser = await puppeteer.launch(puppeteerOpts);
+  const page = await browser.newPage();
+  await page.setUserAgent(userAgent);
   await page.goto(`https://damndelicious.net/?s=${searchTerm}`, { waitUntil: 'domcontentloaded' });
 
   // get page numbers
@@ -64,8 +75,9 @@ const deliciousScrape = async (searchTerm) => {
 
 const harvestScrape = async (searchTerm) => {
   // set up puppeteer
-  const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
-  const page = await browser.newPage()
+  const browser = await puppeteer.launch(puppeteerOpts);
+  const page = await browser.newPage();
+  await page.setUserAgent(userAgent);
   await page.goto(`https://www.halfbakedharvest.com/#search/q=${searchTerm}`, { waitUntil: 'domcontentloaded' });
 
   // get results
