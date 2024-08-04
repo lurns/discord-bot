@@ -15,6 +15,7 @@ const deliciousScrape = async (searchTerm) => {
   const browser = await puppeteer.launch(puppeteerOpts);
   const page = await browser.newPage();
   await page.setUserAgent(userAgent);
+  await page.evaluate('navigator.userAgent');
   await page.goto(`https://damndelicious.net/?s=${searchTerm}`, { waitUntil: 'domcontentloaded' });
 
   // get page numbers
@@ -78,6 +79,7 @@ const harvestScrape = async (searchTerm) => {
   const browser = await puppeteer.launch(puppeteerOpts);
   const page = await browser.newPage();
   await page.setUserAgent(userAgent);
+  await page.evaluate('navigator.userAgent');
   await page.goto(`https://www.halfbakedharvest.com/#search/q=${searchTerm}`, { waitUntil: 'domcontentloaded' });
 
   // get results
