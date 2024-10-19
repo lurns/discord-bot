@@ -27,6 +27,6 @@ youtube playlist
 - [discord.js](https://discord.js.org/)
 - [cron](https://npmjs.com/package/cron)
 - [Trello API](https://developer.atlassian.com/cloud/trello/)
-- [OpenWeather API](https://openweathermap.org/)
+- [Tomorrow Weather API](https://www.tomorrow.io/)
 - [Puppeteer](https://github.com/puppeteer/puppeteer)
 - [Youtube Data API](https://developers.google.com/youtube/v3)
