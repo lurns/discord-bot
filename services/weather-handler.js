@@ -15,7 +15,7 @@ export const fetchWeather = async (interaction) => {
   }
 
   // get weather data
-  const weatherData = await fetch(`https://api.tomorrow.io/v4/weather/forecast?location=${city}&apikey=3t2p0XmyOVHQoyBZIOwc6fshtAlKQahd`, {
+  const weatherData = await fetch(`https://api.tomorrow.io/v4/weather/forecast?location=${city}&apikey=${process.env.TOMORROW_WEATHER_KEY}`, {
     method: 'GET',
     headers: {
       'Accept': 'application/json'
