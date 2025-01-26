@@ -9,6 +9,7 @@ import { fetchTasks } from './services/trello-handler.js';
 import { fetchRecipe } from './services/delicious-handler.js';
 import { fetchGif } from './services/gif-handler.js';
 import { fetchYoutube } from './services/youtube-handler.js';
+import { fetchSubs } from './services/sub-handler.js';
 import { rollDanceTime } from './util/time.js';
 
 const client = new Client({ 
@@ -31,13 +32,15 @@ client.on('ready', async () => {
 
 	const channel = client.channels.cache.find(c => c.id === process.env.CHANNEL_ID);
 
-	// await fetchYoutube();
-
 	// send weather + tasks every day at 8 AM
 	nodeCron.schedule('0 0 8 * * *', async () => {
 		try {
 			const weatherEmbed = await fetchWeather();
 			channel.send({ embeds: [weatherEmbed] });
+
+			// check for subscriptions that are renewing soon
+			const subs = await fetchSubs();
+			if (subs) channel.send({ embeds: [subs] })
 
 			// if it's a weekday, send tasks and schedule a dance break
 			const today = new Date();
