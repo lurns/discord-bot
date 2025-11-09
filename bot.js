@@ -10,6 +10,7 @@ import { fetchRecipe } from './services/delicious-handler.js';
 import { fetchGif } from './services/gif-handler.js';
 import { fetchYoutube } from './services/youtube-handler.js';
 import { fetchSubs } from './services/sub-handler.js';
+import { fetchMedia, handleMediaModalSubmit } from './services/media-handler.js';
 import { rollDanceTime } from './util/time.js';
 
 const client = new Client({ 
@@ -26,7 +27,7 @@ for (const file of commandFiles) {
 	client.commands.set(command.default.data.name, command);
 }
 
-client.on('ready', async () => {
+client.on('clientReady', async () => {
 	console.log('bot has logged in');
 	console.log(`${client.user.username}`);
 
@@ -95,22 +96,37 @@ client.on('ready', async () => {
 });
 
 client.on('interactionCreate', async (interaction) => {
-	if (interaction.isButton() && interaction.customId.includes('music')) {
-		const videoUrl = await fetchYoutube(interaction);
-		return await interaction.reply(videoUrl);
-	}
-
-  	if (!interaction.isCommand()) return;
-
-	const command = client.commands.get(interaction.commandName);
-
-	if (!command) return;
-
 	try {
-		await command.default.execute(interaction);
+		// handle button interactions
+		if (interaction.isButton()) {
+			if (interaction.customId.startsWith('music')) {
+				const videoUrl = await fetchYoutube(interaction);
+				return interaction.reply(videoUrl);
+			}
+
+			if (interaction.customId.startsWith('media')) {
+				return fetchMedia(interaction);
+			}
+		}
+
+		// handle modal submissions
+		if (interaction.customId === 'mediaModal') {
+			await handleMediaModalSubmit(interaction);
+			return interaction.reply({ content: 'Media added successfully!' });
+		}
+
+		// handle slash commands
+		if (interaction.isCommand()) {
+			const command = client.commands.get(interaction.commandName);
+			if (command) await command.default.execute(interaction);
+		}
 	} catch (error) {
-		console.error(error);
-		await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+		console.error('Interaction error:', error);
+		if (interaction.replied || interaction.deferred) {
+			await interaction.followUp({ content: 'There was an error while executing this command!', ephemeral: true });
+		} else {
+			await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+		}
 	}
 });
 
