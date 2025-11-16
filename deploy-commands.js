@@ -1,5 +1,4 @@
-import dotenv from 'dotenv';
-dotenv.config()
+process.loadEnvFile('.env')
 
 import fs from 'node:fs'
 import { REST } from 'discord.js'

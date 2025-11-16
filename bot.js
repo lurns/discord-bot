@@ -1,6 +1,3 @@
-import dotenv from 'dotenv';
-dotenv.config()
-
 import { Client, Collection, GatewayIntentBits, Partials } from 'discord.js';
 import fs from 'node:fs'
 import nodeCron from 'node-cron';
@@ -12,6 +9,8 @@ import { fetchYoutube } from './services/youtube-handler.js';
 import { fetchSubs } from './services/sub-handler.js';
 import { fetchMedia, handleMediaModalSubmit } from './services/media-handler.js';
 import { rollDanceTime } from './util/time.js';
+
+process.loadEnvFile('.env')
 
 const client = new Client({ 
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildIntegrations],
