@@ -10,8 +10,6 @@ import { fetchSubs } from './services/sub-handler.js';
 import { fetchMedia, handleMediaModalSubmit } from './services/media-handler.js';
 import { rollDanceTime } from './util/time.js';
 
-process.loadEnvFile('.env')
-
 const client = new Client({ 
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildIntegrations],
   partials: [Partials.Message, Partials.Reaction] 

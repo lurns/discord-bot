@@ -1,0 +1,12 @@
+services:
+  crab-bot:
+    build: .
+    container_name: crab-bot
+    image: crab-bot:latest
+    restart: unless-stopped
+    env_file: .env
+    healthcheck:
+      test: ["CMD", "node", "healthcheck.js"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

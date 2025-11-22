@@ -1,6 +1,5 @@
 import { google } from "googleapis";
 import fs from "fs";
-process.loadEnvFile('.env')
 
 const SCOPES = ["https://www.googleapis.com/auth/spreadsheets"];
 const credentials = JSON.parse(fs.readFileSync("gapi.json"));

@@ -1,5 +1,3 @@
-process.loadEnvFile('.env')
-
 import fs from 'node:fs'
 import { REST } from 'discord.js'
 import { Routes } from 'discord-api-types/v9'
