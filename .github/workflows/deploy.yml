@@ -1,0 +1,54 @@
+name: Deploy Crab Bot
+
+on:
+  push:
+    branches:
+      - master
+      - dev
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get branch name
+        id: get_branch
+        run: echo "branch=${GITHUB_REF_NAME##*/}" >> $GITHUB_OUTPUT
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.HOST_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.HOST_IP }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to Server
+        run: |
+          echo "::group::SSH Deploy"
+          ssh -i ~/.ssh/id_ed25519 ${{ secrets.USER }}@${{ secrets.HOST_IP }} << 'EOF'
+
+          set -e
+
+          BRANCH="${{ steps.get_branch.outputs.branch }}"
+
+          echo "📥 Pulling latest code from \$BRANCH..."
+
+          cd ~/crab-bot
+
+          git fetch origin \$BRANCH
+          git checkout \$BRANCH
+          git reset --hard origin/\$BRANCH
+
+          echo "📦 Building and restarting container..."
+          docker compose down
+          docker compose up -d --build
+
+          echo "🧼 Pruning unused images..."
+          docker image prune -af --filter "until=24h"
+
+          echo "✨ Deployment complete!"
+          EOF
+          echo "::endgroup::"
