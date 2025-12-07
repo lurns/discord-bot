@@ -42,12 +42,13 @@ jobs:
           git checkout \$BRANCH
           git reset --hard origin/\$BRANCH
 
+          echo "🧼 Pruning unused images..."
+          docker system prune -a --volumes -f || true
+          docker builder prune -a -f || true
+
           echo "📦 Building and restarting container..."
           docker compose down
           docker compose up -d --build
-
-          echo "🧼 Pruning unused images..."
-          docker image prune -af --filter "until=24h"
 
           echo "✨ Deployment complete!"
           EOF
