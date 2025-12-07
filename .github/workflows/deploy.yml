@@ -45,6 +45,7 @@ jobs:
           echo "🧼 Pruning unused images..."
           docker system prune -a --volumes -f || true
           docker builder prune -a -f || true
+          docker buildx prune -a -f || true
 
           echo "📦 Building and restarting container..."
           docker compose down
