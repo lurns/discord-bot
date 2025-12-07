@@ -95,3 +95,11 @@ export async function addRow(sheetName, data) {
   console.log(`➕ Added new row to ${sheetName}`);
   return newRow;
 }
+
+// Helper to map sheet rows to objects using headers
+export const rowsToObjects = (rows) => {
+  const [headers, ...dataRows] = rows;
+  return dataRows.map(row =>
+    Object.fromEntries(headers.map((h, i) => [h, row[i] || ""]))
+  );
+}

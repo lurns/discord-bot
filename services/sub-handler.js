@@ -1,8 +1,10 @@
-const updateSubDate = async (updatedSubs) => {
-  for (var sub of updatedSubs) {
-    let subDate = new Date(sub.renewalDay);
+import { readSheet, updateRow, rowsToObjects } from "../util/sheets.js";
 
-    switch (sub.renewalCycle) {
+const updateSubDate = async (updatedSubs) => {
+  for (const sub of updatedSubs) {
+    let subDate = new Date(sub['Renewal Day']);
+
+    switch (sub['Renewal Cycle']) {
       case "monthly":
         subDate.setMonth(subDate.getMonth() + 1);
         break;
@@ -12,42 +14,33 @@ const updateSubDate = async (updatedSubs) => {
       default: // leave the date the same
         break;
     }
-    sub.renewalDay = subDate.toLocaleDateString();
+    const newRenewalDay = subDate.toLocaleDateString();
 
-    await fetch(`${process.env.SUBS_SHEETY_URL}/${sub.id}`, {
-      method: 'PUT',
-      body: JSON.stringify({ subscription: sub }),
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${process.env.SUBS_SHEETY_TOKEN}`,
-        'Content-Type': 'application/json'
-      }
-    })
-    .catch(err => console.error(err));
+    // update google sheet using subscription name as unique key
+    await updateRow(
+      "subscriptions",
+      "Subscription", 
+      sub.Subscription,
+      { ['Renewal Day']: newRenewalDay }
+    );
   }
-}
+};
 
 export const fetchSubs = async () => {
-  // get subscriptions from google sheet
-  const res = await fetch(process.env.SUBS_SHEETY_URL, {
-    method: 'GET',
-    headers: {
-      'Accept': 'application/json',
-      'Authorization': `Bearer ${process.env.SUBS_SHEETY_TOKEN}`
-    }
-  })
-  .then(response => response.json())
-  .catch(err => console.error(err));
+  // get all rows from the "subscriptions" sheet
+  const rows = await readSheet("subscriptions");
+  if (!rows.length) return;
+
+  const subs = rowsToObjects(rows);
 
   // check for subs renewing today
   const today = new Date().toLocaleDateString();
 
   let subsRenewing = [];
 
-  for (var sub of res.subscriptions) {
-    const subDate = new Date(sub.renewalDay).toLocaleDateString();
-
-    if (today == subDate) subsRenewing.push(sub);
+  for (const sub of subs) {
+    const subDate = new Date(sub['Renewal Day']).toLocaleDateString();
+    if (today === subDate) subsRenewing.push(sub);
   }
 
   // format message
@@ -56,10 +49,10 @@ export const fetchSubs = async () => {
       color: 0xff7a7a,
       title: `Heads up! ${subsRenewing.length} subscription(s) are renewing soon! 💸`,
       description: ''
-    }
+    };
 
-    for (var sub of subsRenewing) {
-      subEmbed.description += `📆 ${sub.subscription} \n`
+    for (const sub of subsRenewing) {
+      subEmbed.description += `📆 ${sub.subscription} \n`;
     }
 
     // update subscription dates in google sheet
@@ -67,4 +60,4 @@ export const fetchSubs = async () => {
 
     return subEmbed;
   }
-}
+};
