@@ -47,12 +47,12 @@ export const fetchSubs = async () => {
   if (subsRenewing.length > 0) {
     let subEmbed = {
       color: 0xff7a7a,
-      title: `Heads up! ${subsRenewing.length} subscription(s) are renewing soon! 💸`,
+      title: `Heads up! ${subsRenewing.length} ${subsRenewing.length === 1 ? 'subscription is' : 'subscriptions are'}  renewing soon! 💸`,
       description: ''
     };
 
     for (const sub of subsRenewing) {
-      subEmbed.description += `📆 ${sub.subscription} \n`;
+      subEmbed.description += `📆 ${sub.Subscription} \n`;
     }
 
     // update subscription dates in google sheet

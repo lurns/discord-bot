@@ -28,7 +28,7 @@ jobs:
       - name: Deploy to Server
         run: |
           echo "::group::SSH Deploy"
-          ssh -i ~/.ssh/id_ed25519 ${{ secrets.USER }}@${{ secrets.HOST_IP }} << EOF
+          ssh -T -i ~/.ssh/id_ed25519 ${{ secrets.USER }}@${{ secrets.HOST_IP }} << EOF
 
           set -e
 
