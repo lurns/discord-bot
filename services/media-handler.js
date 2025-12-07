@@ -1,5 +1,6 @@
 import { ModalBuilder, LabelBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import * as sheet from "../util/sheets.js";
+import { rowsToObjects } from "../util/sheets.js";
 
 const mediaEmoji = (mediaType) => {
   switch (mediaType) {
@@ -16,6 +17,21 @@ const mediaEmoji = (mediaType) => {
     case 'TV':
     default:
       return '📺';
+  }
+}
+
+const mediaStatusEmoji = (status) => {
+  switch (status) {
+    case 'Completed':
+      return '🤝';
+    case 'In Progress':
+      return '🚧';
+    case 'Abandoned':
+      return '✌️';
+    case 'In Queue':
+      return '✍️';
+    default:
+      return '';
   }
 }
 
@@ -36,18 +52,45 @@ export const fetchMedia = async (interaction) => {
 
 const viewMedia = async () => {
   const sheetRes = await sheet.readSheet("media", "media!A1:F11");
+  const mediaObjects = rowsToObjects(sheetRes);
 
   let viewMediaEmbed = {
     color: 0x0b5394,
     title: `Here's your recent media consumption 🎬📚🎧`,
-    description: ''
+    description: '',
+    fields: []
   }
 
-  // rm header
+  let mediaTypes = ''
+  let mediaNames = ''
+  let mediaDatesAndStatuses = ''
+
+  // append value to each embed field
   // used google app script to auto-sort sheet by date
-  for (var media of sheetRes.slice(1,11)) {
-    viewMediaEmbed.description += `${mediaEmoji(media[1])} ${media[0]} ${media[2]} \n`
+  for (const media of mediaObjects.slice(0, 10)) {
+    mediaTypes += `${mediaEmoji(media.Type)}\n`;
+    mediaNames += ` ** ${media.Title} ** \n`;
+    mediaDatesAndStatuses += `${mediaStatusEmoji(media.Status)} ${media.Date}\n`;
   }
+
+  // finish setting the embed fields
+  viewMediaEmbed.fields.push(
+    {
+      name: `Type`,
+      value: mediaTypes,
+      inline: true,
+    }, 
+    {
+      name: `Title`,
+      value: mediaNames,
+      inline: true,
+    }, 
+    {
+      name: `Date`,
+      value: mediaDatesAndStatuses,
+      inline: true,
+    }
+  );
 
   return viewMediaEmbed;
 }
@@ -75,6 +118,7 @@ export async function handleMediaModalSubmit(interaction) {
     // save to sheet
     await sheet.addRow("media", submittedData);
   } catch (e) {
+    console.error(e);
   }
 }
 
