@@ -1,6 +1,6 @@
 # discord-bot
 
-A bot designed to fetch data via discord commands. Sends out weather and work tasks automatically each morning, and a recipe each afternoon.
+A bot designed to fetch data via discord commands. Sends out weather and work tasks automatically each morning, and a recipe each afternoon. Keeps track of subscriptions and sends out a reminder when they're close to renewing.
 
 ## Commands
 
@@ -18,8 +18,10 @@ A bot designed to fetch data via discord commands. Sends out weather and work ta
 
 `/recipe [keyword]` searches for a recipe via given keyword
 
-`/music` 🆕 gives option of 'work' or 'break' and selects a random video from an appropriate 
+`/music` gives option of 'work' or 'break' and selects a random video from an appropriate 
 youtube playlist
+
+`/media` 🆕 gives option to view my recent media or add a new thing I've consumed 
 
 ## Technologies
 
@@ -30,4 +32,4 @@ youtube playlist
 - [Tomorrow Weather API](https://www.tomorrow.io/)
 - [Puppeteer](https://github.com/puppeteer/puppeteer)
 - [Youtube Data API](https://developers.google.com/youtube/v3)
-- [Sheety](https://sheety.co/)
+- [Google API](https://www.npmjs.com/package/googleapis)
