@@ -145,7 +145,7 @@ client.on('messageCreate', async (message) => {
 
 		return message.reply({ embeds: [await parseFindMedia(nlpResult.entities)] });
 	} else {
-		return message.reply("Sorry, I couldn't understand your media request.");
+		return message.reply("Sorry, I couldn't understand your request. I can help you find media you've consumed. Try asking me to 'list my most recent movies' or 'show my completed books.'");
 	}
 });
 

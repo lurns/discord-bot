@@ -100,7 +100,7 @@ const viewMedia = async (mediaReq) => {
   // set up media embed
   let viewMediaEmbed = {
     color: 0x0b5394,
-    title: `Here's your recent media consumption 🎬📚🎧`,
+    title: mediaObjects.length ? `Here's your recent media consumption 🎬📚🎧` : `No media found. 😱`,
     description: ''
   }
 
@@ -273,13 +273,13 @@ export const parseFindMedia = async (modelResponse) => {
         mediaReq.mediaStatus = entity.option;
         break;
       case 'mediaCount':
-      case 'number':
+      // case 'number':
         const parsedCount = parseInt(entity.sourceText);
         if (!isNaN(parsedCount) && parsedCount > 0) mediaReq.count = parsedCount;
         break;
       case 'daterange':
-        mediaReq.startDate = entity.resolution.values[0].start;
-        mediaReq.endDate = entity.resolution.values[0].end;
+        mediaReq.startDate = entity.resolution?.start;
+        mediaReq.endDate = entity.resolution?.end;
         break;
       default:
         break;
