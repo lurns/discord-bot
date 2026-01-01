@@ -25,6 +25,8 @@ youtube playlist
 
 `/media` 🆕 gives option to view my recent media or add a new thing I've consumed 
 
+🆕 Alternatively, find media based on type (ex. TV, movies), date range consumed (ex. December 2025), and/or status (ex. Completed, In Progress). Chat directly in the channel and let the crab NLP parse that request for ya. 
+
 ## Technologies
 
 - [Node.js](https://nodejs.org/)
@@ -35,3 +37,4 @@ youtube playlist
 - [Puppeteer](https://github.com/puppeteer/puppeteer)
 - [Youtube Data API](https://developers.google.com/youtube/v3)
 - [Google API](https://www.npmjs.com/package/googleapis)
+- [NLP.js](https://github.com/axa-group/nlp.js)
