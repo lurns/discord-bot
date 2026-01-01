@@ -35,6 +35,40 @@ const mediaStatusEmoji = (status) => {
   }
 }
 
+// determine any intent filters and format request
+const formatMediaReq = (mediaReq = {}) => ({
+  mediaType: mediaReq.mediaType ?? null,
+  mediaStatus: mediaReq.mediaStatus ?? null,
+  startDate: mediaReq.startDate ?? null,
+  endDate: mediaReq.endDate ?? null,
+  count: mediaReq.count ?? 10,
+});
+
+// filter media based on user input
+const filterMedia = (mediaObjects, filters) => {
+  return mediaObjects.filter(media => {
+    if (filters.mediaType && media.Type !== filters.mediaType) {
+      return false;
+    }
+
+    if (filters.mediaStatus && media.Status !== filters.mediaStatus) {
+      return false;
+    }
+
+    if (filters.startDate && filters.endDate) {
+      const mediaDate = new Date(media.Date);
+      const start = new Date(filters.startDate);
+      const end = new Date(filters.endDate);
+
+      if (mediaDate < start || mediaDate > end) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+};
+
 export const fetchMedia = async (interaction) => {
   if (interaction) {
     switch (interaction.customId) {
@@ -50,10 +84,20 @@ export const fetchMedia = async (interaction) => {
   }
 }
 
-const viewMedia = async () => {
-  const sheetRes = await sheet.readSheet("media", "media!A1:F11");
-  const mediaObjects = rowsToObjects(sheetRes);
+const viewMedia = async (mediaReq) => {
+  console.log('Viewing media with request:', mediaReq);
 
+  const sheetRes = await sheet.readSheet("media", `media!A:F`);
+  let mediaObjects = rowsToObjects(sheetRes);
+
+  // filter media based on user input if available
+  const filters = formatMediaReq(mediaReq);
+  mediaObjects = filterMedia(mediaObjects, filters);
+
+  console.log(`Found ${mediaObjects.length} media items after filtering.`);
+  console.log('Media items:', JSON.stringify(mediaObjects));
+
+  // set up media embed
   let viewMediaEmbed = {
     color: 0x0b5394,
     title: `Here's your recent media consumption 🎬📚🎧`,
@@ -67,7 +111,7 @@ const viewMedia = async () => {
 
   // append value to each embed field
   // used google app script to auto-sort sheet by date
-  for (const media of mediaObjects.slice(0, 10)) {
+  for (const media of mediaObjects.slice(0, filters.count)) {
     mediaTypes += `${mediaEmoji(media.Type)}\n`;
     mediaNames += ` ** ${media.Title} ** \n`;
     mediaDatesAndStatuses += `${mediaStatusEmoji(media.Status)} ${media.Date}\n`;
@@ -240,4 +284,34 @@ const addMediaModal = async (interaction) => {
 
   // Show the modal to the user
   await interaction.showModal(modal); 
+}
+
+export const parseFindMedia = async (modelResponse) => {
+  let mediaReq = {};
+
+  // extract entities
+  for (const entity of modelResponse) {
+    switch (entity.entity) {
+      case 'mediaType':
+        mediaReq.mediaType = entity.option;
+        break;
+      case 'mediaStatus':
+        mediaReq.mediaStatus = entity.option;
+        break;
+      case 'mediaCount':
+      case 'number':
+        const parsedCount = parseInt(entity.sourceText);
+        if (!isNaN(parsedCount) && parsedCount > 0) mediaReq.count = parsedCount;
+        break;
+      case 'daterange':
+        mediaReq.startDate = entity.resolution.values[0].start;
+        mediaReq.endDate = entity.resolution.values[0].end;
+        break;
+      default:
+        break;
+    }
+  }
+
+  // fetch and return media view embed
+  return viewMedia(mediaReq);
 }

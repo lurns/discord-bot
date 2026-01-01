@@ -1,20 +1,22 @@
 import { Client, Collection, GatewayIntentBits, Partials } from 'discord.js';
 import fs from 'node:fs'
 import nodeCron from 'node-cron';
+import { loadNLP, processText } from './nlp/nlp.js';
 import { fetchWeather } from './services/weather-handler.js';
 import { fetchTasks } from './services/trello-handler.js';
 import { fetchRecipe } from './services/delicious-handler.js';
 import { fetchGif } from './services/gif-handler.js';
 import { fetchYoutube } from './services/youtube-handler.js';
 import { fetchSubs } from './services/sub-handler.js';
-import { fetchMedia, handleMediaModalSubmit } from './services/media-handler.js';
+import { fetchMedia, handleMediaModalSubmit, parseFindMedia } from './services/media-handler.js';
 import { rollDanceTime } from './util/time.js';
 
 const client = new Client({ 
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildIntegrations],
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildIntegrations, GatewayIntentBits.MessageContent],
   partials: [Partials.Message, Partials.Reaction] 
 });
 
+// Load slash commands
 client.commands = new Collection();
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 
@@ -23,6 +25,9 @@ for (const file of commandFiles) {
 
 	client.commands.set(command.default.data.name, command);
 }
+
+// Load NLP
+await loadNLP();
 
 client.on('clientReady', async () => {
 	console.log('bot has logged in');
@@ -124,6 +129,23 @@ client.on('interactionCreate', async (interaction) => {
 		} else {
 			await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
 		}
+	}
+});
+
+client.on('messageCreate', async (message) => {
+	if (message.author.bot) return;
+
+	const nlpResult = await processText(message.content);
+
+	if (nlpResult.intent === 'find_media') {
+		// let response = `You asked to find media with the following parameters:\n`;
+		// nlpResult.entities.forEach(entity => {
+		// 	response += `- ${entity.entity}: ${entity.option ?? entity.sourceText}\n`;
+		// });
+
+		return message.reply({ embeds: [await parseFindMedia(nlpResult.entities)] });
+	} else {
+		return message.reply("Sorry, I couldn't understand your media request.");
 	}
 });
 
