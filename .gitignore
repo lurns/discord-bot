@@ -68,7 +68,7 @@ typings/
 # Yarn Integrity file
 .yarn-integrity
 
-#  environment variables file
+# Environment variables file
 .env
 .env.test
 
@@ -108,3 +108,6 @@ gapi.json
 
 # macOS system files
 .DS_Store
+
+# model artifacts
+model.nlp
