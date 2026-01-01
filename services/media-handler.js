@@ -101,40 +101,14 @@ const viewMedia = async (mediaReq) => {
   let viewMediaEmbed = {
     color: 0x0b5394,
     title: `Here's your recent media consumption 🎬📚🎧`,
-    description: '',
-    fields: []
+    description: ''
   }
-
-  let mediaTypes = ''
-  let mediaNames = ''
-  let mediaDatesAndStatuses = ''
 
   // append value to each embed field
   // used google app script to auto-sort sheet by date
   for (const media of mediaObjects.slice(0, filters.count)) {
-    mediaTypes += `${mediaEmoji(media.Type)}\n`;
-    mediaNames += ` ** ${media.Title} ** \n`;
-    mediaDatesAndStatuses += `${mediaStatusEmoji(media.Status)} ${media.Date}\n`;
+    viewMediaEmbed.description += `${mediaEmoji(media.Type)} ${mediaStatusEmoji(media.Status)} ** ${media.Title} ** *${media.Date}*\n`;
   }
-
-  // finish setting the embed fields
-  viewMediaEmbed.fields.push(
-    {
-      name: `Type`,
-      value: mediaTypes,
-      inline: true,
-    }, 
-    {
-      name: `Title`,
-      value: mediaNames,
-      inline: true,
-    }, 
-    {
-      name: `Date`,
-      value: mediaDatesAndStatuses,
-      inline: true,
-    }
-  );
 
   return viewMediaEmbed;
 }
