@@ -111,3 +111,6 @@ gapi.json
 
 # model artifacts
 model.nlp
+
+# recipe cache
+recipes.json
