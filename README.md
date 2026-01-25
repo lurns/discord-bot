@@ -34,7 +34,6 @@ youtube playlist
 - [cron](https://npmjs.com/package/cron)
 - [Trello API](https://developer.atlassian.com/cloud/trello/)
 - [Tomorrow Weather API](https://www.tomorrow.io/)
-- [Puppeteer](https://github.com/puppeteer/puppeteer)
 - [Youtube Data API](https://developers.google.com/youtube/v3)
 - [Google API](https://www.npmjs.com/package/googleapis)
 - [NLP.js](https://github.com/axa-group/nlp.js)
