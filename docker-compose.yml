@@ -11,5 +11,5 @@ services:
       timeout: 5s
       retries: 3
     volumes:
-      - ./recipes.json:/app/recipes.json 
-      # - /opt/crab-bot-data/recipes.json:/app/recipes.json
+      # - ./recipes.json:/app/recipes.json 
+      - /opt/crab-bot-data/recipes.json:/app/recipes.json
