@@ -10,6 +10,7 @@ import { fetchYoutube } from './services/youtube-handler.js';
 import { fetchSubs } from './services/sub-handler.js';
 import { fetchMedia, handleMediaModalSubmit, parseFindMedia } from './services/media-handler.js';
 import { rollDanceTime } from './util/time.js';
+import { backfillRecipes } from './util/backfill-recipes.js';
 
 const client = new Client({ 
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildIntegrations, GatewayIntentBits.MessageContent],
@@ -28,6 +29,13 @@ for (const file of commandFiles) {
 
 // Load NLP
 await loadNLP();
+
+// Check recipe cache
+if (!fs.existsSync(process.env.RECIPE_CACHE_PATH)) {
+  throw new Error(
+    `recipes.json not found at ${process.env.RECIPE_CACHE_PATH}. Volume not mounted?`
+  );
+}
 
 client.on('clientReady', async () => {
 	console.log('bot has logged in');
@@ -84,9 +92,12 @@ client.on('clientReady', async () => {
 		}
 	});
 
-	// send recipe every day at 12 PM
+	// backfill + send recipe every day at 12 PM
 	nodeCron.schedule('0 0 12 * * *', async () => {
 		try {
+			await backfillRecipes(process.env.DELICIOUS_RECIPE_URL, 1);
+			await backfillRecipes(process.env.HARVEST_RECIPE_URL, 1);
+
 			const recipeEmbed = await fetchRecipe();
 			console.log('sending recipe');
 			channel.send({ embeds: [recipeEmbed] });
