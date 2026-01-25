@@ -12,4 +12,4 @@ services:
       retries: 3
     volumes:
       # - ./recipes.json:/app/recipes.json 
-      - /var/lib/crab-bot/recipes.json:/app/recipes.json
+      - /home/deploy_gha_user/crab-data/recipes.json:/app/recipes.json
