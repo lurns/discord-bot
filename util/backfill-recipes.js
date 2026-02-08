@@ -1,19 +1,18 @@
 import Parser from 'rss-parser';
 import fs from 'fs';
-import path from 'path';
 
 const parser = new Parser();
 const DISCLAIMER = 'This post may contain affiliate links. Please see our privacy policy for details. ';
 
-export const loadRecipes = () => {
-  if (!fs.existsSync(process.env.RECIPE_CACHE_PATH)) {
+export const loadRecipes = async () => {
+  const filePath = process.env.RECIPE_CACHE_PATH || './recipes.json';
+  
+  if (!fs.existsSync(filePath)) {
     return {};
   }
 
   try {
-    const path = process.env.RECIPE_CACHE_PATH || path.resolve(process.cwd(), './recipes.json');
-    const raw = fs.readFileSync(path, 'utf-8');
-
+    const raw = await fs.readFileSync(filePath, 'utf-8');
     return JSON.parse(raw);
   } catch (err) {
     console.error('Failed to parse recipes.json', err);
@@ -49,22 +48,15 @@ const mergeRecipes = (existing, incoming) => {
 }
 
 const retrieveRecipes = async (baseUrl, maxPages = 3) => {
-  const recipes = loadRecipes();
-  let page = 8;
+  const recipes = {};
+  let page = 1;
 
   while (page <= maxPages) {
-    const url = page === 1
-      ? `${baseUrl}/feed/`
-      : `${baseUrl}/feed/?paged=${page}`;
+    const url = `${baseUrl}/feed/?paged=${page}`;
 
     const feed = await parser.parseURL(url);
 
     if (!feed.items.length) break;
-
-    if (page === 1) {
-      fs.writeFileSync('./item.json', JSON.stringify(feed.items[1], null, 2), 'utf-8')
-      // console.(JSON.stringify(feed.items[0], null, 2));
-    }
 
     for (const item of feed.items) {
       recipes[item.link] = {
@@ -89,14 +81,14 @@ const writeRecipesToFile = async (recipes) => {
   await fs.renameSync(tmpPath, path);
 }
 
-export const backfillRecipes = async (baseUrl, maxPages = 7) => {
-  const existing = loadRecipes();
+export const backfillRecipes = async (baseUrl, maxPages = 3) => {
+  const existing = await loadRecipes();
   const newRecipes = await retrieveRecipes(baseUrl, maxPages);
 
   const { merged, added } = mergeRecipes(existing, newRecipes);
 
   if (added > 0) {
-    writeRecipesToFile(merged);
+    await writeRecipesToFile(merged);
     console.log(`Added ${added} new recipes from ${baseUrl}`);
   } else {
     console.log(`No new recipes found from ${baseUrl}`);
