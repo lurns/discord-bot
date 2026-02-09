@@ -2,8 +2,8 @@ import { loadRecipes } from '../util/backfill-recipes.js';
 
 let recipesCache;
 
-const searchRecipes = (searchTerm) => {
-  recipesCache = loadRecipes();
+const searchRecipes = async (searchTerm) => {
+  recipesCache = await loadRecipes();
   const lower = searchTerm.toLowerCase();
 
   return Object.values(recipesCache).filter(r =>
@@ -30,7 +30,13 @@ export const fetchRecipe = async (interaction) => {
 
   // select random recipe
   const matches = await searchRecipes(searchTerm);
-  const recipe = matches.length > 0 ? matches[Math.floor(Math.random() * matches.length)] : recipesCache[0];
+  const allRecipes = Object.values(recipesCache);
+
+  if (!allRecipes.length) {
+    throw new Error('Recipe cache is empty');
+  }
+
+  const recipe = matches.length > 0 ? matches[Math.floor(Math.random() * matches.length)] : allRecipes[Math.floor(Math.random() * allRecipes.length)];
 
   // format message embed
   const recipeEmbed = {

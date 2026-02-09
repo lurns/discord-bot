@@ -1,21 +1,21 @@
 import Parser from 'rss-parser';
-import fs from 'fs';
+import fs from 'fs/promises';
 
 const parser = new Parser();
 const DISCLAIMER = 'This post may contain affiliate links. Please see our privacy policy for details. ';
 
 export const loadRecipes = async () => {
   const filePath = process.env.RECIPE_CACHE_PATH || './recipes.json';
-  
-  if (!fs.existsSync(filePath)) {
-    return {};
-  }
 
   try {
-    const raw = await fs.readFileSync(filePath, 'utf-8');
+    const raw = await fs.readFile(filePath, 'utf-8');
     return JSON.parse(raw);
   } catch (err) {
-    console.error('Failed to parse recipes.json', err);
+    if (err.code === 'ENOENT') {
+      console.warn('recipes.json not found');
+    } else {
+      console.error('Failed to load recipes.json', err);
+    }
     return {};
   }
 }
@@ -77,8 +77,8 @@ const writeRecipesToFile = async (recipes) => {
   const path = './recipes.json';
   const tmpPath = './recipes.tmp.json';
 
-  await fs.writeFileSync(tmpPath, JSON.stringify(recipes, null, 2), 'utf-8');
-  await fs.renameSync(tmpPath, path);
+  await fs.writeFile(tmpPath, JSON.stringify(recipes, null, 2), 'utf-8');
+  await fs.rename(tmpPath, path);
 }
 
 export const backfillRecipes = async (baseUrl, maxPages = 3) => {
