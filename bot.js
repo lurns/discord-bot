@@ -93,7 +93,7 @@ client.on('clientReady', async () => {
 	});
 
 	// backfill + send recipe every day at 12 PM
-	nodeCron.schedule('0 0 12 * * *', async () => {
+	nodeCron.schedule('0 50 12 * * *', async () => {
 		try {
 			await backfillRecipes([
 				process.env.DELICIOUS_RECIPE_URL,

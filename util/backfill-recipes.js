@@ -75,13 +75,19 @@ const retrieveRecipes = async (baseUrl, maxPages = 3) => {
 
 const writeRecipesToFile = async (recipes) => {
   const path = './recipes.json';
-  const tmpPath = './recipes.tmp.json';
 
-  await fs.writeFile(tmpPath, JSON.stringify(recipes, null, 2), 'utf-8');
-  await fs.rename(tmpPath, path);
+  try {
+    await fs.writeFile(path, JSON.stringify(recipes, null, 2),'utf-8');
+
+    console.log('recipes.json updated successfully.');
+  } catch (err) {
+    console.error('Failed to write recipes.json', err);
+    throw err;
+  }
 }
 
 export const backfillRecipes = async (baseUrls = [], maxPages = 3) => {
+  console.log('Backfill started at', new Date().toISOString());
   const existing = await loadRecipes();
 
   let allNewRecipes = {};
