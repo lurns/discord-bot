@@ -87,7 +87,6 @@ const writeRecipesToFile = async (recipes) => {
 }
 
 export const backfillRecipes = async (baseUrls = [], maxPages = 3) => {
-  console.log('Backfill started at', new Date().toISOString());
   const existing = await loadRecipes();
 
   let allNewRecipes = {};
