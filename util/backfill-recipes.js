@@ -81,16 +81,25 @@ const writeRecipesToFile = async (recipes) => {
   await fs.rename(tmpPath, path);
 }
 
-export const backfillRecipes = async (baseUrl, maxPages = 3) => {
+export const backfillRecipes = async (baseUrls = [], maxPages = 3) => {
   const existing = await loadRecipes();
-  const newRecipes = await retrieveRecipes(baseUrl, maxPages);
 
-  const { merged, added } = mergeRecipes(existing, newRecipes);
+  let allNewRecipes = {};
+
+  for (const url of baseUrls) {
+    const newRecipes = await retrieveRecipes(url, maxPages);
+
+    const { merged } = mergeRecipes(allNewRecipes, newRecipes);
+
+    allNewRecipes = merged;
+  }
+
+  const { merged, added } = mergeRecipes(existing, allNewRecipes);
 
   if (added > 0) {
     await writeRecipesToFile(merged);
-    console.log(`Added ${added} new recipes from ${baseUrl}`);
+    console.log(`Added ${added} new recipes.`);
   } else {
-    console.log(`No new recipes found from ${baseUrl}`);
+    console.log(`No new recipes found.`);
   }
 }
