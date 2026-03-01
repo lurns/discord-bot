@@ -1,4 +1,12 @@
-import { ModalBuilder, LabelBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
+import { 
+  MessageFlags,
+  ModalBuilder, 
+  LabelBuilder, 
+  StringSelectMenuBuilder, 
+  StringSelectMenuOptionBuilder, 
+  TextInputBuilder, 
+  TextInputStyle
+} from "discord.js";
 import * as sheet from "../util/sheets.js";
 import { rowsToObjects } from "../util/sheets.js";
 
@@ -75,11 +83,11 @@ export const fetchMedia = async (interaction) => {
       case 'media-add':
         return addMediaModal(interaction);
       case 'media-edit':
-        return interaction.reply({ content: 'Edit definitely coming soon 🚧', ephemeral: true });
+        return interaction.reply({ content: 'Edit definitely coming soon 🚧', flags: MessageFlags.Ephemeral });
       case 'media-view':
         return interaction.reply({ embeds: [await viewMedia()] });
       default:
-        return interaction.reply({ content: 'Unknown media action.', ephemeral: true });
+        return interaction.reply({ content: 'Unknown media action.', flags: MessageFlags.Ephemeral });
     }
   }
 }

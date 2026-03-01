@@ -1,4 +1,4 @@
-import { Client, Collection, GatewayIntentBits, Partials } from 'discord.js';
+import { Client, Collection, GatewayIntentBits, Partials, MessageFlags } from 'discord.js';
 import fs from 'node:fs'
 import nodeCron from 'node-cron';
 import { loadNLP, processText } from './nlp/nlp.js';
@@ -8,6 +8,7 @@ import { fetchRecipe } from './services/delicious-handler.js';
 import { fetchGif } from './services/gif-handler.js';
 import { fetchYoutube } from './services/youtube-handler.js';
 import { fetchSubs } from './services/sub-handler.js';
+import { updateLastSent, fetchPrompt } from './services/journal-handler.js';
 import { fetchMedia, handleMediaModalSubmit, parseFindMedia } from './services/media-handler.js';
 import { rollDanceTime } from './util/time.js';
 import { backfillRecipes } from './util/backfill-recipes.js';
@@ -53,12 +54,15 @@ client.on('clientReady', async () => {
 			const subs = await fetchSubs();
 			if (subs) channel.send({ embeds: [subs] })
 
-			// if it's a weekday, send tasks and schedule a dance break
+			// if it's a weekday, send tasks, schedule a dance break, & send prompt
 			const today = new Date();
 
 			if (today.getDay() > 0 && today.getDay() < 6) {
 				const workTasks = await fetchTasks();
 				channel.send(workTasks);
+
+				const journalPromptEmbed = await fetchPrompt();
+				channel.send(journalPromptEmbed);
 
 				// send a timesheet reminder on mondays
 				if (today.getDay() === 1) {
@@ -122,6 +126,15 @@ client.on('interactionCreate', async (interaction) => {
 			if (interaction.customId.startsWith('media')) {
 				return fetchMedia(interaction);
 			}
+
+			// mark last sent prompt as completed
+			if (interaction.customId === 'completed_prompt') {
+				await updateLastSent();
+				return interaction.reply({ 
+					content: 'Yo ho ho! Marked completed! ✅', 
+					flags: MessageFlags.Ephemeral
+				});
+			}
 		}
 
 		// handle modal submissions
@@ -138,9 +151,15 @@ client.on('interactionCreate', async (interaction) => {
 	} catch (error) {
 		console.error('Interaction error:', error);
 		if (interaction.replied || interaction.deferred) {
-			await interaction.followUp({ content: 'There was an error while executing this command!', ephemeral: true });
+			await interaction.followUp({ 
+				content: 'There was an error while executing this command!', 
+				flags: MessageFlags.Ephemeral 
+			});
 		} else {
-			await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+			await interaction.reply({ 
+				content: 'There was an error while executing this command!', 
+				flags: MessageFlags.Ephemeral 
+			});
 		}
 	}
 });
