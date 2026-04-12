@@ -7,8 +7,7 @@ import {
   TextInputBuilder, 
   TextInputStyle
 } from "discord.js";
-import * as sheet from "../util/sheets.js";
-import { rowsToObjects } from "../util/sheets.js";
+import supabase from "../util/db.js";
 
 const mediaEmoji = (mediaType) => {
   switch (mediaType) {
@@ -53,28 +52,26 @@ const formatMediaReq = (mediaReq = {}) => ({
 });
 
 // filter media based on user input
-const filterMedia = (mediaObjects, filters) => {
-  return mediaObjects.filter(media => {
-    if (filters.mediaType && media.Type !== filters.mediaType) {
-      return false;
-    }
+const filterMedia = async (filters) => {
+  let query = supabase
+    .from('media')
+    .select('*')
+    .order('date', { ascending: false });
 
-    if (filters.mediaStatus && media.Status !== filters.mediaStatus) {
-      return false;
-    }
+  if (filters.mediaType)  { query = query.eq('type', filters.mediaType) }
+  if (filters.mediaStatus)  { query = query.eq('status', filters.mediaStatus) }
+  if (filters.startDate) { query = query.gte('date', filters.startDate.toISOString()) }
+  if (filters.endDate) { query = query.lte('date', filters.endDate.toISOString()) }
+  if (filters.count) { query = query.limit(filters.count) }
 
-    if (filters.startDate && filters.endDate) {
-      const mediaDate = new Date(media.Date);
-      const start = new Date(filters.startDate);
-      const end = new Date(filters.endDate);
+  const { data, error } = await query;
 
-      if (mediaDate < start || mediaDate > end) {
-        return false;
-      }
-    }
-
-    return true;
-  });
+  if (error) {
+    console.error('Error filtering media:', error);
+    return [];
+  } else {
+    return data;
+  }
 };
 
 export const fetchMedia = async (interaction) => {
@@ -94,28 +91,36 @@ export const fetchMedia = async (interaction) => {
 
 const viewMedia = async (mediaReq) => {
   console.log('Viewing media with request:', mediaReq);
+  let mediaItems = [];
 
-  const sheetRes = await sheet.readSheet("media", `media!A:F`);
-  let mediaObjects = rowsToObjects(sheetRes);
+  if (mediaReq) {
+    console.log('Media request provided, fetching and filtering media...');
+    const filters = formatMediaReq(mediaReq);
 
-  // filter media based on user input if available
-  const filters = formatMediaReq(mediaReq);
-  mediaObjects = filterMedia(mediaObjects, filters);
+    mediaItems = await filterMedia(filters);
+  } else {
+    console.log('No media request provided, fetching last 10 media items...');
+    const { data, error } = await supabase.from('media').select('*').order('date', { ascending: false }).limit(10);
+    
+    if (error) {
+      console.error('Error fetching media:', error);
+    } else {
+      mediaItems = [...data];
+    }
+  }
 
-  console.log(`Found ${mediaObjects.length} media items after filtering.`);
-  console.log('Media items:', JSON.stringify(mediaObjects));
+  console.log(`Found ${mediaItems.length} media items.`);
 
   // set up media embed
   let viewMediaEmbed = {
     color: 0x0b5394,
-    title: mediaObjects.length ? `Here's your recent media consumption 🎬📚🎧` : `No media found. 😱`,
+    title: mediaItems.length ? `Here's your recent media consumption 🎬📚🎧` : `No media found. 😱`,
     description: ''
   }
 
   // append value to each embed field
-  // used google app script to auto-sort sheet by date
-  for (const media of mediaObjects.slice(0, filters.count)) {
-    viewMediaEmbed.description += `${mediaEmoji(media.Type)} ${mediaStatusEmoji(media.Status)} ** ${media.Title} ** *${media.Date}*\n`;
+  for (const media of mediaItems) {
+    viewMediaEmbed.description += `${mediaEmoji(media.type)} ${mediaStatusEmoji(media.status)} ** ${media.title} ** *${media.date}*\n`;
   }
 
   return viewMediaEmbed;
@@ -133,16 +138,25 @@ export async function handleMediaModalSubmit(interaction) {
       const key = comp.customId
         .replace(/^media/i, "")
         .replace(/Input$/i, "");
-      const header = key.charAt(0).toUpperCase() + key.slice(1);
+      const header = key.charAt(0).toLowerCase() + key.slice(1);
 
       submittedData[header] = value;
     }
 
     // Add today's date in MM/DD/YYYY format
-    submittedData.Date = new Date().toLocaleDateString("en-US", { timeZone: "America/Chicago" });
+    submittedData.date = new Date().toLocaleDateString("en-US", { timeZone: "America/Chicago" });
 
-    // save to sheet
-    await sheet.addRow("media", submittedData);
+    // Convert rating to a number if it exists
+    submittedData.rating = parseFloat(submittedData.rating) ?? null;
+    
+    // save to db
+    const { data: addedMedia, error } = await supabase.from('media').insert(submittedData).select();
+
+    if (error) {
+      console.error('Error adding media:', error);
+    } else {
+      console.log('Media added successfully:', addedMedia);
+    }
   } catch (e) {
     console.error(e);
   }
