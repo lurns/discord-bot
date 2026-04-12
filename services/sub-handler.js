@@ -1,62 +1,45 @@
-import { readSheet, updateRow, rowsToObjects } from "../util/sheets.js";
+import supabase from "../util/db.js";
 
 const updateSubDate = async (updatedSubs) => {
-  for (const sub of updatedSubs) {
-    let subDate = new Date(sub['Renewal Day']);
+  const toUpdate = updatedSubs.map(sub => {
+    let nextSubDate = new Date(sub.renewal_day);
 
-    switch (sub['Renewal Cycle']) {
-      case "monthly":
-        subDate.setMonth(subDate.getMonth() + 1);
-        break;
-      case "annually":
-        subDate.setFullYear(subDate.getFullYear() + 1);
-        break;
-      default: // leave the date the same
-        break;
-    }
-    const newRenewalDay = subDate.toLocaleDateString();
+    let renewalMonths = nextSubDate.getMonth() + sub.renewal_cycle_in_months;
+    nextSubDate.setMonth(renewalMonths);
 
-    // update google sheet using subscription name as unique key
-    await updateRow(
-      "subscriptions",
-      "Subscription", 
-      sub.Subscription,
-      { ['Renewal Day']: newRenewalDay }
-    );
-  }
+    return { ...sub, renewal_day: nextSubDate };
+  });
+
+  const { error } = await supabase.from('subscriptions').upsert(toUpdate);
+
+  if (error) console.error('Error updating subscription dates:', error);
 };
 
 export const fetchSubs = async () => {
-  // get all rows from the "subscriptions" sheet
-  const rows = await readSheet("subscriptions");
-  if (!rows.length) return;
+  // query supabase for subs renewing today
+  const { data: subs, error } = await supabase
+    .from('subscriptions')
+    .select('*')
+    .eq('renewal_day', new Date().toLocaleDateString());
 
-  const subs = rowsToObjects(rows);
-
-  // check for subs renewing today
-  const today = new Date().toLocaleDateString();
-
-  let subsRenewing = [];
-
-  for (const sub of subs) {
-    const subDate = new Date(sub['Renewal Day']).toLocaleDateString();
-    if (today === subDate) subsRenewing.push(sub);
+  if (error) {
+    console.error('Error fetching subscriptions:', error);
+    return;
   }
 
-  // format message
-  if (subsRenewing.length > 0) {
+  if (subs.length > 0) {
     let subEmbed = {
       color: 0xff7a7a,
-      title: `Heads up! ${subsRenewing.length} ${subsRenewing.length === 1 ? 'subscription is' : 'subscriptions are'}  renewing soon! 💸`,
+      title: `Heads up! ${subs.length} ${subs.length === 1 ? 'subscription is' : 'subscriptions are'} renewing soon! 💸`,
       description: ''
     };
 
-    for (const sub of subsRenewing) {
-      subEmbed.description += `📆 ${sub.Subscription} \n`;
+    for (const sub of subs) {
+      subEmbed.description += `📆 ${sub.subscription} \n`;
     }
 
-    // update subscription dates in google sheet
-    await updateSubDate(subsRenewing);
+    // update subscription dates in db
+    await updateSubDate(subs);
 
     return subEmbed;
   }
