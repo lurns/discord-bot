@@ -1,73 +1,35 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from "discord.js";
-import { readSheet, updateRow, rowsToObjects } from "../util/sheets.js";
+import supabase from "../util/db.js";
 
 let lastPromptSent = {};
 
 // update last sent date for prompt when confirmed completed via button interaction
 export const updateLastSent = async () => {
-  const today = new Date().toLocaleDateString();
+  console.log('Updating last sent date for prompt:', JSON.stringify(lastPromptSent));
+  const today = new Date();
 
-  // update google sheet using prompt as unique key
-  await updateRow(
-    "journal",
-    "Prompt", 
-    lastPromptSent.Prompt,
-    { ['Last Sent']: today }
-  );
+  const { error } = await supabase.from('journal')
+    .update({ last_sent: today })
+    .eq('id', lastPromptSent.id);
+
+  if (error) console.error('Error updating last sent date for prompt:', error);
 };
 
 export const fetchPrompt = async () => {
-  // get all rows from the "journal" sheet
-  const rows = await readSheet("journal");
-  if (!rows.length) return;
-
-  const prompts = rowsToObjects(rows);
-
-  // filter to prompts that haven't been sent within the last 60 days
-  const today = new Date().toLocaleDateString();
-
-  let validPrompts = [];
-
-  for (const prompt of prompts) {
-    // if never sent, add to valid prompts
-    if (!prompt['Last Sent']) {
-      validPrompts.push(prompt);
-      continue;
-    }
-
-    const lastSentDate = new Date(prompt['Last Sent']).toLocaleDateString();
-    const daysSinceLastSent = (new Date(today) - new Date(lastSentDate)) / (1000 * 60 * 60 * 24);
-
-    if (daysSinceLastSent >= 60) validPrompts.push(prompt);
-  }
-
-  console.log(`Found ${validPrompts.length} valid prompts.`);
-
   // set base embed template and button
   let promptEmbed = new EmbedBuilder()
     .setTitle('Journal Prompt ✍️');
-    
-  const completedButton = new ButtonBuilder()
-    .setCustomId('completed_prompt')
-    .setLabel('Mark Completed')
-    .setStyle(ButtonStyle.Success);
+  
+  // get all rows from supabase journal table 
+  // where last_sent is null or more than 60 days ago
+  const { data: prompts, error } = await supabase.from('journal')
+    .select('*')
+    .or('last_sent.is.null,last_sent.lte.' + new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString());
 
-  const row = new ActionRowBuilder().addComponents(completedButton);
+  if (error) console.error('Error fetching prompts from database:', error);
 
-  // select a random prompt from the valid prompts or send default, return embed
-  if (validPrompts.length > 0) {
-    const randomIndex = Math.floor(Math.random() * validPrompts.length);
-    const selectedPrompt = validPrompts[randomIndex];
-
-    promptEmbed
-      .setColor(0x18e3c1)
-      .setDescription(`${selectedPrompt.Prompt}`);
-
-    // set last prompt sent so we can mark it updated later
-    lastPromptSent = selectedPrompt;
-
-    return { embeds: [promptEmbed], components: [row] };
-  } else {
+  // if no prompts found/err, send default message
+  if (!prompts || !prompts.length) {
     promptEmbed 
       .setColor(0xff7a7a)
       .setDescription(`
@@ -79,4 +41,25 @@ export const fetchPrompt = async () => {
 
     return { embeds: [promptEmbed] };
   }
+
+  // set up completed button
+  const completedButton = new ButtonBuilder()
+    .setCustomId('completed_prompt')
+    .setLabel('Mark Completed')
+    .setStyle(ButtonStyle.Success);
+
+  const row = new ActionRowBuilder().addComponents(completedButton);
+
+  // pick random prompt from list
+  const randomIndex = Math.floor(Math.random() * prompts.length);
+  const selectedPrompt = prompts[randomIndex];
+
+  promptEmbed
+    .setColor(0x18e3c1)
+    .setDescription(`${selectedPrompt.prompt}`);
+
+  // set last prompt sent so we can mark it completed later
+  lastPromptSent = selectedPrompt;
+
+  return { embeds: [promptEmbed], components: [row] };
 };
