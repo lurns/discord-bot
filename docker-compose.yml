@@ -10,6 +10,3 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
-    volumes:
-      # - ./recipes.json:/app/recipes.json 
-      - /home/deploy_gha_user/crab-data/recipes.json:/app/recipes.json

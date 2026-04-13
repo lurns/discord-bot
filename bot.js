@@ -31,13 +31,6 @@ for (const file of commandFiles) {
 // Load NLP
 await loadNLP();
 
-// Check recipe cache
-if (!fs.existsSync(process.env.RECIPE_CACHE_PATH)) {
-  throw new Error(
-    `recipes.json not found at ${process.env.RECIPE_CACHE_PATH}. Volume not mounted?`
-  );
-}
-
 client.on('clientReady', async () => {
 	console.log('bot has logged in');
 	console.log(`${client.user.username}`);

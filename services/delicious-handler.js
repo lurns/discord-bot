@@ -1,16 +1,4 @@
-import { loadRecipes } from '../util/backfill-recipes.js';
-
-let recipesCache;
-
-const searchRecipes = async (searchTerm) => {
-  recipesCache = await loadRecipes();
-  const lower = searchTerm.toLowerCase();
-
-  return Object.values(recipesCache).filter(r =>
-    r.title.toLowerCase().includes(lower) ||
-    r.description.toLowerCase().includes(lower)
-  );
-}
+import supabase from '../util/db.js';
 
 export const fetchRecipe = async (interaction) => {
   const keywords = [
@@ -29,14 +17,26 @@ export const fetchRecipe = async (interaction) => {
   }
 
   // select random recipe
-  const matches = await searchRecipes(searchTerm);
-  const allRecipes = Object.values(recipesCache);
+  let recipe;
+  let { data, error } = await supabase
+    .from('random_recipe')
+    .select('*')
+    .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
+    .limit(1);
 
-  if (!allRecipes.length) {
-    throw new Error('Recipe cache is empty');
+  recipe = data?.[0];
+  if (error) console.error('Error fetching recipe:', error);
+
+  // if no match found, select random recipe from the view
+  if (!data || data.length === 0) {
+    let { data: randomRecipe, error: randomError } = await supabase
+      .from('random_recipe')
+      .select('*')
+      .limit(1);
+    recipe = randomRecipe?.[0];
+
+    if (randomError) console.error('Error fetching random recipe:', randomError);
   }
-
-  const recipe = matches.length > 0 ? matches[Math.floor(Math.random() * matches.length)] : allRecipes[Math.floor(Math.random() * allRecipes.length)];
 
   // format message embed
   const recipeEmbed = {
