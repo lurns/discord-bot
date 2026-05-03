@@ -30,8 +30,8 @@ export const fetchGif = async (type) => {
 
     const searchTerm = keywords[Math.floor(Math.random() * keywords.length)];
 
-    // fetch options from tenor
-    const res = await fetch(`https://tenor.googleapis.com/v2/search?q=${searchTerm}&key=${process.env.TENOR_KEY}&limit=10`, {
+    // fetch options from klipy
+    const res = await fetch(`https://api.klipy.com/api/v1/${process.env.KLIPY_KEY}/gifs/search?q=${searchTerm}&per_page=15`, {
         method: 'GET',
         headers: {
         'Accept': 'application/json'
@@ -46,7 +46,7 @@ export const fetchGif = async (type) => {
     .catch(err => console.error(err));
 
     const gifs = JSON.parse(res);
-    const selectedGif = gifs.results[Math.floor(Math.random() * gifs.results.length)];
+    const selectedGif = gifs.data.data[Math.floor(Math.random() * gifs.data.data.length)];
 
-    return selectedGif.media_formats.gif.url;
+    return selectedGif.file.md.gif.url;
 }
