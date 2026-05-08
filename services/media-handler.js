@@ -1,4 +1,5 @@
 import { 
+  ActionRowBuilder,
   MessageFlags,
   ModalBuilder, 
   LabelBuilder, 
@@ -80,7 +81,7 @@ export const fetchMedia = async (interaction) => {
       case 'media-add':
         return addMediaModal(interaction);
       case 'media-edit':
-        return interaction.reply({ content: 'Edit definitely coming soon 🚧', flags: MessageFlags.Ephemeral });
+        return searchMediaModal(interaction);
       case 'media-view':
         return interaction.reply({ embeds: [await viewMedia()] });
       default:
@@ -156,6 +157,80 @@ export async function handleMediaModalSubmit(interaction) {
       console.error('Error adding media:', error);
     } else {
       console.log('Media added successfully:', addedMedia);
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+const searchMediaModal = async (interaction) => {
+  // create modal
+  const modal = new ModalBuilder()
+    .setCustomId('searchMediaModal')
+    .setTitle('Search by Media Title');
+
+  // set up modal form components
+  modal.addLabelComponents(
+    // title
+    new LabelBuilder()
+      .setLabel("Title")
+      .setDescription("Name of media to search for")
+      .setTextInputComponent(
+        new TextInputBuilder()
+          .setCustomId("searchMediaTitleInput")
+          .setPlaceholder("Mean Girls")
+          .setRequired(true)
+          .setStyle(TextInputStyle.Short)
+      )
+  );
+
+  // Show the modal to the user
+  return await interaction.showModal(modal); 
+}
+
+export async function handleSearchMediaModalSubmit(interaction) {
+  try {
+    const searchTitle = interaction.components[0].component.value;
+
+    // search for titles like the input
+    const { data: mediaItems, error } = await supabase
+      .from('media')
+      .select('*')
+      .ilike('title', `%${searchTitle}%`)
+      .order('date', { ascending: false });
+
+    if (error) {
+      console.error(`Error searching media with title "${searchTitle}":`, error);
+    } else {
+      console.log('Media search results:', mediaItems);
+      if (mediaItems.length === 0) {
+        return interaction.reply({ content: `No media found with title like "${searchTitle}".`, flags: MessageFlags.Ephemeral });
+      }
+
+      // set up media search results embed
+      // todo make this look nicer
+      let searchSelectOptions = [];
+      let searchMediaResultsEmbed = {
+        color: 0x0b5394,
+        title: `Search results for "${searchTitle}" 🎬📚🎧`,
+        description: ''
+      }
+
+      // create select menu options from search results
+      for (const media of mediaItems) {
+        searchSelectOptions.push(
+          new StringSelectMenuOptionBuilder()
+            .setLabel(`${media.title} (${media.type})`)
+            .setValue(media.id.toString())
+            .setDescription( `Status: ${media.status}, Date: ${media.date}`) 
+        );
+      }
+
+      // add select menu to embed
+      const select = new StringSelectMenuBuilder().setCustomId('searchMediaResultsSelect').addOptions(searchSelectOptions);
+		  const selectRow = new ActionRowBuilder().addComponents(select);
+
+     return { embeds: [searchMediaResultsEmbed], components: [selectRow], withResponse: true };
     }
   } catch (e) {
     console.error(e);

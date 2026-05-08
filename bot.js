@@ -9,7 +9,7 @@ import { fetchGif } from './services/gif-handler.js';
 import { fetchYoutube } from './services/youtube-handler.js';
 import { fetchSubs } from './services/sub-handler.js';
 import { updateLastSent, fetchPrompt } from './services/journal-handler.js';
-import { fetchMedia, handleMediaModalSubmit, parseFindMedia } from './services/media-handler.js';
+import { fetchMedia, handleMediaModalSubmit, handleSearchMediaModalSubmit, parseFindMedia } from './services/media-handler.js';
 import { rollDanceTime } from './util/time.js';
 import { backfillRecipes } from './util/backfill-recipes.js';
 
@@ -134,6 +134,17 @@ client.on('interactionCreate', async (interaction) => {
 		if (interaction.customId === 'mediaModal') {
 			await handleMediaModalSubmit(interaction);
 			return interaction.reply({ content: 'Media added successfully!' });
+		}
+
+		// handle media search modal submissions
+		if (interaction.customId === 'searchMediaModal') {
+			const resultsEmbed = await handleSearchMediaModalSubmit(interaction);
+			return interaction.reply(resultsEmbed);
+		}
+
+		if (interaction.isStringSelectMenu() && interaction.customId === 'searchMediaResultsSelect') {
+			// todo: show edit modal pre-filled with selected media item data
+			console.log('Selected media ID:', interaction.values[0]);
 		}
 
 		// handle slash commands
