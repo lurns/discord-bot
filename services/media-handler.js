@@ -9,6 +9,7 @@ import {
   TextInputStyle
 } from "discord.js";
 import supabase from "../util/db.js";
+import { notesBuilder, ratingBuilder, statusesBuilder, titleBuilder, typesBuilder } from "../util/media-builder.js";
 
 const mediaEmoji = (mediaType) => {
   switch (mediaType) {
@@ -163,15 +164,15 @@ export async function handleMediaModalSubmit(interaction) {
   }
 }
 
+// modal for searching media by title - used for edit flow
 const searchMediaModal = async (interaction) => {
   // create modal
   const modal = new ModalBuilder()
     .setCustomId('searchMediaModal')
     .setTitle('Search by Media Title');
 
-  // set up modal form components
+  // search by title input component
   modal.addLabelComponents(
-    // title
     new LabelBuilder()
       .setLabel("Title")
       .setDescription("Name of media to search for")
@@ -188,6 +189,7 @@ const searchMediaModal = async (interaction) => {
   return await interaction.showModal(modal); 
 }
 
+// parse media search results and return embed with select menu of results
 export async function handleSearchMediaModalSubmit(interaction) {
   try {
     const searchTitle = interaction.components[0].component.value;
@@ -237,121 +239,112 @@ export async function handleSearchMediaModalSubmit(interaction) {
   }
 }
 
+export async function handleEditMediaModalSubmit(interaction) {
+  try {
+    // fetch media item by id
+    const mediaId = interaction.customId.split('_')[1];
+    let { data: mediaItem } = await supabase.from('media').select('*').eq('id', mediaId).single();
+
+    for (const component of interaction.components) {
+      const comp = component.component;
+      const value = comp.type === 3 ? comp.values[0] : comp.value;
+
+      // extract key from customId
+      const key = comp.customId
+        .replace(/^media/i, "")
+        .replace(/Input$/i, "");
+      const header = key.charAt(0).toLowerCase() + key.slice(1);
+
+      mediaItem[key.toLowerCase()] = value;
+    }
+
+    // Add today's date in MM/DD/YYYY format
+    mediaItem.date = new Date().toLocaleDateString("en-US", { timeZone: "America/Chicago" });
+
+    // Convert rating to a number if it exists
+    mediaItem.rating = parseFloat(mediaItem.rating) ?? null;
+    
+    // save to db
+    const { error: editError } = await supabase.from('media').update(mediaItem).eq('id', mediaId).select();
+
+    if (editError) console.error('Error updating media:', editError);
+
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+const buildMediaModal = (mediaItem = null) => {
+  let title = titleBuilder();
+  let types = typesBuilder();
+  let statuses = statusesBuilder();
+  let rating = ratingBuilder();
+  let notes = notesBuilder();
+  
+  // if editing an item, pre-fill modal values
+  if (mediaItem) {
+    // prefill title
+    title.data.component.setValue(mediaItem.title);
+
+    // preselect type
+    for (let option of types.data.component.options) {
+      if (option.data.value === mediaItem.type) {
+        option.setDefault(true);
+        break;
+      }
+    }
+
+    // preselect status
+    for (const option of statuses.data.component.options) {
+      if (option.data.value === mediaItem.status) {
+        option.setDefault(true);
+        break;
+      }
+    }
+
+    // prefill rating
+    if (mediaItem.rating) {
+      rating.data.component.setValue(mediaItem.rating.toString());
+    }
+
+    // prefill notes
+    if (mediaItem.notes) {
+      notes.data.component.setValue(mediaItem.notes);
+    }
+  }
+
+  return [title, types, statuses, rating, notes];
+}
+
+// edit media modal
+export const editMediaModal = async (interaction, mediaId) => {
+  // fetch media item by id
+  const { data: mediaItem } = await supabase.from('media').select('*').eq('id', mediaId).single();
+
+  let modal = new ModalBuilder()
+    .setCustomId(`editMediaModal_${mediaId}`)
+    .setTitle('Edit Media Consumption');
+
+  const modalComponents = buildMediaModal(mediaItem);
+
+  // set up modal form components with pre-filled values
+  modal.addLabelComponents(...modalComponents);
+
+  // Show the modal to the user
+  await interaction.showModal(modal);
+}
+
 const addMediaModal = async (interaction) => {
   // create modal
   const modal = new ModalBuilder()
-    .setCustomId('mediaModal')
+    .setCustomId(`addMediaModal_${Date.now()}`)
     .setTitle('Add Media Consumption');
 
+  // get modal components
+  const modalComponents = buildMediaModal();
+
   // set up modal form components
-  modal.addLabelComponents(
-    // title
-    new LabelBuilder()
-      .setLabel("Title")
-      .setDescription("Name of media")
-      .setTextInputComponent(
-        new TextInputBuilder()
-          .setCustomId("mediaTitleInput")
-          .setPlaceholder("Mean Girls")
-          .setRequired(true)
-          .setStyle(TextInputStyle.Short)
-      ),
-    // type
-    new LabelBuilder()
-      .setLabel("Type")
-      .setDescription("Select the type of media")
-      .setStringSelectMenuComponent(new StringSelectMenuBuilder()
-        .setCustomId("mediaTypeInput")
-        .setPlaceholder("Choose media type")
-        .setRequired(true)
-        .setOptions(
-          new StringSelectMenuOptionBuilder()
-            .setLabel("Movie")
-            .setDescription("Seen any good flicks lately?")
-            .setEmoji("🎬")
-            .setValue("Movie"),
-          new StringSelectMenuOptionBuilder()
-            .setLabel("TV")
-            .setDescription("Anything good on?")
-            .setEmoji("📺")
-            .setValue("TV"),
-          new StringSelectMenuOptionBuilder()
-            .setLabel("Podcast")
-            .setDescription(`Who's yappin'?`)
-            .setEmoji("🎧")
-            .setValue("Podcast"),
-          new StringSelectMenuOptionBuilder()
-            .setLabel("Videogame")
-            .setDescription("Are ya winning, son?")
-            .setEmoji("🎮")
-            .setValue("Videogame"),
-          new StringSelectMenuOptionBuilder()
-            .setLabel("Music")
-            .setDescription("Are ya winning, son?")
-            .setEmoji("🎵")
-            .setValue("Music"),
-          new StringSelectMenuOptionBuilder()
-            .setLabel("Book")
-            .setDescription(`Let's get those personal pan pizzas cookin'!`)
-            .setEmoji("📚")
-            .setValue("Book")
-        )
-      ),
-    // status
-    new LabelBuilder()
-      .setLabel("Status")
-      .setDescription("Select status of where you're at")
-      .setStringSelectMenuComponent(new StringSelectMenuBuilder()
-        .setCustomId("mediaStatusInput")
-        .setPlaceholder("Choose your status")
-        .setRequired(true)
-        .setOptions(
-          new StringSelectMenuOptionBuilder()
-            .setLabel("Completed")
-            .setDescription("Done-zo")
-            .setEmoji("🤝")
-            .setValue("Completed"),
-          new StringSelectMenuOptionBuilder()
-            .setLabel("In Progress")
-            .setDescription("Workin on it")
-            .setEmoji("🚧")
-            .setValue("In Progress"),
-          new StringSelectMenuOptionBuilder()
-            .setLabel('Abandoned')
-            .setDescription(`Ugh this sucks, I'm outta here`)
-            .setEmoji("✌️")
-            .setValue('Abandoned'),
-          new StringSelectMenuOptionBuilder()
-            .setLabel('In Queue')
-            .setDescription(`Upcoming stuff to check out`)
-            .setEmoji("✍️")
-            .setValue('In Queue')
-        )
-      ),
-    // rating
-    new LabelBuilder()
-      .setLabel("Rating")
-      .setDescription("Give it a ⭐️ rating (1-5)")
-      .setTextInputComponent(
-        new TextInputBuilder()
-          .setCustomId("mediaRatingInput")
-          .setPlaceholder("5")
-          .setRequired(false)
-          .setStyle(TextInputStyle.Short)
-      ),
-    // notes
-    new LabelBuilder()
-      .setLabel("Notes")
-      .setDescription("Any thoughts? Any????")
-      .setTextInputComponent(
-        new TextInputBuilder()
-          .setCustomId("mediaNotesInput")
-          .setPlaceholder("brb buying army pants and flip flops")
-          .setMaxLength(1_000)
-          .setRequired(false)
-          .setStyle(TextInputStyle.Paragraph)
-      )
-  );
+  modal.addLabelComponents(...modalComponents);
 
   // Show the modal to the user
   await interaction.showModal(modal); 
