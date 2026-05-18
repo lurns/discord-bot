@@ -11,7 +11,7 @@ const mediaTypes = [
     label: "Movie",
     description: "Seen any good flicks lately?",
     emoji: "🎬",
-    value: "movie"
+    value: "Movie"
   },
   {
     label: "TV",
