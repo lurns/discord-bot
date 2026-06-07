@@ -51,7 +51,7 @@ export const handleSearchMediaToTrackModalSubmit = async (interaction) => {
     const res = await searchShowByTitle(searchTitle);
 
     if (!res.results) {
-      console.error(`Error searching media with title "${searchTitle}":`, error);
+      console.error(`Error searching media with title "${searchTitle}":`, res);
     } else if (res.results.length === 0) {
       return interaction.reply({ content: `No media found with title like "${searchTitle}".`, flags: MessageFlags.Ephemeral });
     } else {
