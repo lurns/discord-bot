@@ -10,6 +10,7 @@ import { fetchYoutube } from './services/youtube-handler.js';
 import { fetchSubs } from './services/sub-handler.js';
 import { updateLastSent, fetchPrompt } from './services/journal-handler.js';
 import { fetchMedia, handleMediaModalSubmit, handleSearchMediaModalSubmit, handleEditMediaModalSubmit, editMediaModal, parseFindMedia } from './services/media-handler.js';
+import { addToTrackedMedia, checkNewEpisodes, handleSearchMediaToTrackModalSubmit } from './services/tv-tracker-handler.js';
 import { rollDanceTime } from './util/time.js';
 import { backfillRecipes } from './util/backfill-recipes.js';
 
@@ -46,6 +47,10 @@ client.on('clientReady', async () => {
 			// check for subscriptions that are renewing soon
 			const subs = await fetchSubs();
 			if (subs) channel.send({ embeds: [subs] })
+
+			// check for shows with new episodes airing today
+			const airingToday = await checkNewEpisodes();
+			if (airingToday) channel.send({ embeds: [airingToday] });
 
 			// if it's a weekday, send tasks, schedule a dance break, & send prompt
 			const today = new Date();
@@ -142,9 +147,21 @@ client.on('interactionCreate', async (interaction) => {
 			return interaction.reply(resultsEmbed);
 		}
 
+		// handle media tracking search modal submissions
+		if (interaction?.customId === 'searchMediaToTrackModal') {
+			const resultsEmbed = await handleSearchMediaToTrackModalSubmit(interaction);
+			return interaction.reply(resultsEmbed);
+		}
+
 		// handle selected media to edit from search results
 		if (interaction?.isStringSelectMenu() && interaction?.customId === 'searchMediaResultsSelect') {
 			await editMediaModal(interaction, interaction.values[0]);
+		}
+
+		// handle selected media to track from search results
+		if (interaction?.isStringSelectMenu() && interaction?.customId === 'searchMediaToTrackResultsSelect') {
+			await addToTrackedMedia(interaction.values[0]);
+			return interaction.reply({ content: 'Media added to your tracked list! 📆', flags: MessageFlags.Ephemeral });
 		}
 
 		// handle edit modal submissions

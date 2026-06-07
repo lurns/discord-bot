@@ -10,6 +10,7 @@ import {
 } from "discord.js";
 import supabase from "../util/db.js";
 import { notesBuilder, ratingBuilder, statusesBuilder, titleBuilder, typesBuilder } from "../util/media-builder.js";
+import { searchMediaToTrackModal } from "./tv-tracker-handler.js";
 
 const mediaEmoji = (mediaType) => {
   switch (mediaType) {
@@ -85,6 +86,9 @@ export const fetchMedia = async (interaction) => {
         return searchMediaModal(interaction);
       case 'media-view':
         return interaction.reply({ embeds: [await viewMedia()] });
+      // handling tv tracking separately
+      case 'media-track':
+        return searchMediaToTrackModal(interaction);
       default:
         return interaction.reply({ content: 'Unknown media action.', flags: MessageFlags.Ephemeral });
     }

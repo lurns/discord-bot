@@ -25,6 +25,12 @@ export default {
         .setCustomId('media-edit')
         .setLabel('Edit ✏️')
         .setStyle(ButtonStyle.Secondary)
+    )
+    .addComponents(
+      new ButtonBuilder()
+        .setCustomId('media-track')
+        .setLabel('Track 📆')
+        .setStyle(ButtonStyle.Secondary)
     );
 
     await interaction.editReply(

@@ -23,7 +23,7 @@ youtube playlist
 
 ![](/src/media.png 'Example of using /media command to view media')
 
-`/media` 🆕 gives option to view my recent media or add a new thing I've consumed 
+`/media` 🆕 gives option to view my recent media, add a new thing I've consumed, edit a media entry, or track a show to keep me up-to-date on new episodes
 
 🆕 Alternatively, find media based on type (ex. TV, movies), date range consumed (ex. December 2025), and/or status (ex. Completed, In Progress). Chat directly in the channel and let the crab NLP parse that request for ya. 
 
@@ -37,3 +37,4 @@ youtube playlist
 - [Youtube Data API](https://developers.google.com/youtube/v3)
 - [Google API](https://www.npmjs.com/package/googleapis)
 - [NLP.js](https://github.com/axa-group/nlp.js)
+- [TMDB API](https://www.themoviedb.org/)
