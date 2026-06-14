@@ -90,7 +90,7 @@ export const checkNewEpisodes = async () => {
   const { data: trackedShows, error } = await supabase
     .from('tracked_shows')
     .select('*')
-    .eq('next_check_at', new Date().toLocaleDateString("en-US", { timeZone: "America/Chicago" }));
+    .eq('next_check_at', toDBDate(new Date()));
 
   if (error) {
     console.error('Error fetching tracked shows:', error);
@@ -110,7 +110,7 @@ export const checkNewEpisodes = async () => {
     const showRes = await getShowDetails(show.tmdb_id);
 
     // if next episode to air is different than last known episode, we know a new episode is airing
-    if (isNewEpisode(show, showRes)) {
+    if (isNewEpisode(show, showRes) && showRes.next_episode_to_air.air_date === toDBDate(new Date())) {
       const isFinale = showRes.last_episode_to_air.episode_type === 'finale' ? true : false;
 
       showsToPost.push({
@@ -147,20 +147,27 @@ const updateTrackedMedia = async (showId, showRes) => {
 
     const today = new Date();
 
+    const updateItem = { 
+          tmdb_id: showRes.id, 
+          show_name: showRes.name, 
+          last_known_episode: {
+            season: showRes.last_episode_to_air.season_number,
+            episode: showRes.last_episode_to_air.episode_number,
+            episode_name: showRes.last_episode_to_air.name,
+            air_date: toDBDate(new Date(showRes.last_episode_to_air.air_date))
+          }, 
+          status: status, 
+          next_episode_at: showRes.next_episode_to_air ? toDBDate(new Date(showRes.next_episode_to_air.air_date)) : null,
+          next_check_at: determineCheckDate(status, showRes.next_episode_to_air),
+          updated_at: toDBDate(today)
+        }
+
+    console.log('updating show id', showId);
+    console.log('updating tracked media with:', updateItem);
+
     await supabase
       .from('tracked_shows')
-      .update({
-        status: status,
-        last_known_episode: {
-          season: showRes.last_episode_to_air.season_number,
-          episode: showRes.last_episode_to_air.episode_number,
-          episode_name: showRes.last_episode_to_air.name,
-          air_date: new Date(showRes.last_episode_to_air.air_date)
-        },
-        next_episode_at: showRes.next_episode_to_air ? new Date(showRes.next_episode_to_air.air_date) : null,
-        next_check_at: showRes.next_episode_to_air ? new Date(showRes.next_episode_to_air.air_date) : determineCheckDate(status),
-        updated_at: today.toLocaleDateString("en-US", { timeZone: "America/Chicago" })
-      })
+      .update(updateItem)
       .eq('id', showId);
   } catch (error) {
     console.error('Error updating tracked media:', error);
@@ -188,12 +195,12 @@ export const addToTrackedMedia = async (showId) => {
             season: showRes.last_episode_to_air.season_number,
             episode: showRes.last_episode_to_air.episode_number,
             episode_name: showRes.last_episode_to_air.name,
-            air_date: new Date(showRes.last_episode_to_air.air_date)
+            air_date: toDBDate(new Date(showRes.last_episode_to_air.air_date))
           }, 
           status: status, 
-          next_episode_at: showRes.next_episode_to_air ? new Date(showRes.next_episode_to_air.air_date) : null,
-          next_check_at: showRes.next_episode_to_air ? new Date(showRes.next_episode_to_air.air_date) : determineCheckDate(status),
-          updated_at: today.toLocaleDateString("en-US", { timeZone: "America/Chicago" })
+          next_episode_at: showRes.next_episode_to_air ? toDBDate(new Date(showRes.next_episode_to_air.air_date)) : null,
+          next_check_at: determineCheckDate(status, showRes.next_episode_to_air),
+          updated_at: toDBDate(today)
         }
       ]);
 
@@ -252,17 +259,22 @@ const determineStatus = (show) => {
 }
 
 // set frequency of checks based on whether show is currently airing or not
-const determineCheckDate = (status) => {
+const determineCheckDate = (status, nextEpisode) => {
   const today = new Date();
+
+  if (nextEpisode) {
+    const nextAirDate = toDBDate(new Date(nextEpisode.air_date));
+    if (nextAirDate > toDBDate(today)) return nextAirDate;
+  }
 
   if (status === STATUS.AIRING || status === STATUS.UPCOMING) {
     const nextWeek = new Date(today);
     nextWeek.setDate(today.getDate() + 7);
-    return nextWeek.toLocaleDateString("en-US", { timeZone: "America/Chicago" });
+    return toDBDate(nextWeek);
   } else {
     const nextMonth = new Date(today);
     nextMonth.setMonth(today.getMonth() + 1);
-    return nextMonth.toLocaleDateString("en-US", { timeZone: "America/Chicago" });
+    return toDBDate(nextMonth);
   }
 }
 
@@ -298,3 +310,6 @@ const getShowDetails = async (showId) => {
       .catch(err => console.error(err));
     return showRes;
 }
+
+// handle postgres date format
+const toDBDate = (date) => date.toISOString().slice(0, 10);
