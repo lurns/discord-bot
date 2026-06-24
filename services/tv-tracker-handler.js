@@ -110,8 +110,8 @@ export const checkNewEpisodes = async () => {
     const showRes = await getShowDetails(show.tmdb_id);
 
     // if next episode to air is different than last known episode, we know a new episode is airing
-    if (isNewEpisode(show, showRes) && showRes.next_episode_to_air.air_date === toDBDate(new Date())) {
-      const isFinale = showRes.last_episode_to_air.episode_type === 'finale' ? true : false;
+    if (isNewEpisode(show, showRes) && showRes.next_episode_to_air?.air_date === toDBDate(new Date())) {
+      const isFinale = determineFinale(showRes);
 
       showsToPost.push({
         name: show.show_name,
@@ -276,6 +276,23 @@ const determineCheckDate = (status, nextEpisode) => {
     nextMonth.setMonth(today.getMonth() + 1);
     return toDBDate(nextMonth);
   }
+}
+
+// use next episode to air (which is usually what will air day-of checking) to see if it'll be a finale
+const determineFinale = (showRes) => {
+  if (showRes.next_episode_to_air) {
+    if (showRes.next_episode_to_air.episode_type === 'finale') return true;
+    
+    // in case finale not set, check if it's the last episode of the season
+    const thisSeason = showRes.next_episode_to_air.season_number;
+    const nextEpisodeNumber = showRes.next_episode_to_air.episode_number;
+
+    const { seasons } = showRes;
+
+    const currentSeason = seasons.find(season => season.season_number === thisSeason);
+    if (currentSeason && currentSeason.episode_count === nextEpisodeNumber) return true;
+  }
+  return false;
 }
 
 // TMDB API calls
